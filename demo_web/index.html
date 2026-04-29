@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>银行公司业务智能小助手 · Wiki-RAG Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+:root{
+  --primary:#1E3A5F; --primary-light:#2A4A73; --primary-dark:#152D4A;
+  --accent-gold:#C9A84C; --accent-gold-light:#E8D48B;
+  --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#FAFBFC;
+  --text-primary:#1A1A2E; --text-secondary:#64748B; --text-muted:#94A3B8;
+  --border:#E2E8F0; --border-light:#F1F5F9;
+  --success:#16A34A; --success-bg:#F0FDF4;
+  --warning:#D97706; --warning-bg:#FFFBEB;
+  --danger:#DC2626; --danger-bg:#FEF2F2;
+  --info:#0284C7; --info-bg:#F0F9FF;
+  --purple:#7C3AED; --purple-bg:#F5F3FF;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.07),0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -4px rgba(0,0,0,0.05);
+  --radius:8px; --radius-lg:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans SC','Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text-primary);line-height:1.6;font-size:14px;}
+code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
+
+/* Top Nav */
+.top-nav{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:1000;box-shadow:0 2px 8px rgba(30,58,95,0.3);}
+.nav-brand{display:flex;align-items:center;gap:12px;}
+.nav-brand .logo-icon{width:34px;height:34px;background:var(--accent-gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--primary-dark);font-weight:700;}
+.nav-brand h1{color:#FFF;font-size:15px;font-weight:600;letter-spacing:0.02em;}
+.nav-brand .subtitle{color:rgba(255,255,255,0.55);font-size:11px;margin-top:1px;}
+.nav-actions{display:flex;align-items:center;gap:16px;}
+.nav-status{display:flex;align-items:center;gap:8px;padding:5px 12px;background:rgba(255,255,255,0.1);border-radius:20px;color:rgba(255,255,255,0.9);font-size:12px;}
+.nav-status .dot{width:7px;height:7px;background:#4ADE80;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.nav-user{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.9);font-size:13px;}
+.nav-user .avatar{width:30px;height:30px;background:var(--accent-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--primary-dark);}
+
+/* Sidebar */
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);position:fixed;top:56px;bottom:0;left:0;overflow-y:auto;z-index:100;padding:16px 0;}
+.sidebar-menu{list-style:none;}
+.sidebar-menu li{margin-bottom:2px;}
+.sidebar-menu a{display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--text-secondary);text-decoration:none;font-size:13px;font-weight:500;transition:all 0.15s;border-left:3px solid transparent;cursor:pointer;}
+.sidebar-menu a:hover{background:var(--bg);color:var(--text-primary);}
+.sidebar-menu a.active{background:rgba(30,58,95,0.06);color:var(--primary);border-left-color:var(--primary);font-weight:600;}
+.sidebar-menu a .menu-icon{width:18px;text-align:center;font-size:14px;}
+.sidebar-menu a .menu-badge{margin-left:auto;background:var(--accent-gold);color:var(--primary-dark);font-size:10px;padding:1px 7px;border-radius:10px;font-weight:700;}
+.sidebar-divider{height:1px;background:var(--border);margin:12px 20px;}
+.sidebar-section-label{padding:10px 20px 6px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;}
+
+/* Main */
+.main-content{margin-left:240px;margin-top:56px;padding:24px 28px;min-height:calc(100vh - 56px);}
+.page-section{display:none;}
+.page-section.active{display:block;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.page-title{font-size:20px;font-weight:700;color:var(--text-primary);}
+.page-title .title-sub{font-size:12px;color:var(--text-muted);font-weight:400;margin-left:8px;}
+.page-actions{display:flex;gap:8px;}
+.btn{padding:8px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);background:#FFF;color:var(--text-secondary);display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--primary);color:var(--primary);}
+.btn-filled{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#FFF;border:none;}
+.btn-filled:hover{transform:translateY(-1px);box-shadow:var(--shadow-md);color:#FFF;}
+.btn-gold{background:linear-gradient(135deg,var(--accent-gold),#B8973F);color:#FFF;border:none;}
+.btn-gold:hover{box-shadow:var(--shadow-md);color:#FFF;}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:8px;}
+.card-title i{color:var(--primary);}
+.card-body{padding:20px;}
+.card-subtitle{font-size:12px;color:var(--text-muted);font-weight:400;}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#FFF;border-radius:var(--radius-lg);padding:32px;margin-bottom:24px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(201,168,76,0.2) 0%,transparent 70%);}
+.hero h2{font-size:24px;font-weight:700;margin-bottom:6px;position:relative;}
+.hero .hero-sub{font-size:13px;opacity:0.85;margin-bottom:24px;position:relative;}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;position:relative;}
+.hero-stat{border-left:3px solid var(--accent-gold);padding-left:14px;}
+.hero-stat .label{font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;}
+.hero-stat .value{font-size:22px;font-weight:700;margin-top:2px;color:var(--accent-gold-light);}
+.hero-stat .desc{font-size:11px;opacity:0.65;margin-top:2px;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;}
+.stat-card .stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+.stat-card .stat-value{font-size:24px;font-weight:700;color:var(--text-primary);margin-top:4px;display:flex;align-items:baseline;gap:6px;}
+.stat-card .stat-value .stat-unit{font-size:13px;font-weight:500;color:var(--text-muted);}
+.stat-card .stat-trend{font-size:11px;color:var(--text-secondary);margin-top:6px;}
+.stat-card .stat-trend i{margin-right:3px;}
+
+/* Two columns */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+
+/* Tech Stack */
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.tech-item{padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);transition:all 0.2s;}
+.tech-item:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.tech-item .tech-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.tech-item .tech-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#FFF;font-size:14px;}
+.tech-item .tech-name{font-size:13px;font-weight:700;color:var(--text-primary);}
+.tech-item .tech-tag{font-size:10px;color:var(--text-muted);background:#FFF;border:1px solid var(--border);padding:1px 6px;border-radius:4px;margin-left:auto;}
+.tech-item .tech-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.5;}
+.tech-item .tech-meta{font-size:10.5px;color:var(--text-muted);margin-top:6px;font-family:'JetBrains Mono',monospace;}
+
+/* Param Table */
+.param-table{width:100%;border-collapse:collapse;}
+.param-table th{text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;padding:8px 12px;border-bottom:1px solid var(--border);}
+.param-table td{padding:10px 12px;font-size:12.5px;border-bottom:1px solid var(--border-light);}
+.param-table td:nth-child(1){font-weight:600;color:var(--text-primary);width:30%;}
+.param-table td:nth-child(2){font-family:'JetBrains Mono',monospace;color:var(--primary);font-weight:600;width:18%;}
+.param-table td:nth-child(3){color:var(--text-secondary);}
+.param-table tr:hover td{background:var(--bg);}
+
+/* Flow Diagram */
+.flow-diagram{display:flex;align-items:stretch;gap:8px;padding:8px 0;overflow-x:auto;}
+.flow-step{flex:1;min-width:120px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px;position:relative;transition:all 0.2s;}
+.flow-step:hover{border-color:var(--primary);box-shadow:var(--shadow-md);}
+.flow-step .step-num{position:absolute;top:-10px;left:10px;width:22px;height:22px;background:var(--primary);color:#FFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+.flow-step .step-icon{font-size:18px;color:var(--primary);margin-bottom:6px;}
+.flow-step .step-name{font-size:12.5px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}
+.flow-step .step-desc{font-size:10.5px;color:var(--text-muted);line-height:1.4;}
+.flow-step .step-tech{font-size:10px;color:var(--accent-gold);font-weight:600;margin-top:4px;font-family:'JetBrains Mono',monospace;}
+.flow-arrow{align-self:center;color:var(--text-muted);font-size:14px;flex-shrink:0;}
+
+/* Design Idea Cards */
+.idea-card{padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);position:relative;}
+.idea-card .idea-num{position:absolute;top:14px;right:14px;font-size:36px;font-weight:800;color:var(--accent-gold-light);line-height:1;opacity:0.5;}
+.idea-card .idea-title{font-size:14px;font-weight:700;color:var(--primary);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.idea-card .idea-desc{font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:8px;}
+.idea-card .idea-detail{font-size:11px;color:var(--text-muted);background:#FFF;padding:8px 10px;border-radius:6px;border-left:3px solid var(--accent-gold);font-family:'JetBrains Mono',monospace;}
+
+/* Roadmap */
+.roadmap{position:relative;padding:8px 0;}
+.roadmap::before{content:'';position:absolute;left:14px;top:14px;bottom:14px;width:2px;background:linear-gradient(to bottom,var(--primary),var(--accent-gold));}
+.roadmap-item{position:relative;padding-left:42px;padding-bottom:18px;}
+.roadmap-item:last-child{padding-bottom:0;}
+.roadmap-item .roadmap-dot{position:absolute;left:7px;top:6px;width:16px;height:16px;border-radius:50%;background:#FFF;border:3px solid var(--primary);}
+.roadmap-item.done .roadmap-dot{background:var(--success);border-color:var(--success);}
+.roadmap-item.done .roadmap-dot::after{content:'✓';position:absolute;top:-3px;left:1px;color:#FFF;font-size:9px;font-weight:700;}
+.roadmap-item .roadmap-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--primary);background:rgba(30,58,95,0.08);padding:2px 8px;border-radius:10px;margin-bottom:4px;}
+.roadmap-item.done .roadmap-tag{color:var(--success);background:var(--success-bg);}
+.roadmap-item .roadmap-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}
+.roadmap-item .roadmap-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.5;}
+
+/* Memory Mechanism */
+.memory-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.memory-card{padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);text-align:center;}
+.memory-card .m-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:#FFF;font-size:16px;}
+.memory-card .m-title{font-size:12.5px;font-weight:700;color:var(--text-primary);margin-bottom:4px;}
+.memory-card .m-scope{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
+.memory-card .m-desc{font-size:11px;color:var(--text-secondary);line-height:1.4;}
+
+/* Forms */
+.form-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:12px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-secondary);}
+.form-group label .req{color:var(--danger);}
+.form-group input,.form-group select,.form-group textarea{padding:9px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#FFF;font-family:inherit;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,58,95,0.08);}
+.form-group textarea{resize:vertical;min-height:60px;}
+.form-hint{font-size:10.5px;color:var(--text-muted);margin-top:2px;}
+
+/* Pills / Tags */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;}
+.pill-success{background:var(--success-bg);color:var(--success);}
+.pill-warning{background:var(--warning-bg);color:var(--warning);}
+.pill-danger{background:var(--danger-bg);color:var(--danger);}
+.pill-info{background:var(--info-bg);color:var(--info);}
+.pill-purple{background:var(--purple-bg);color:var(--purple);}
+.pill-gold{background:#FEF6E0;color:#92750E;}
+.pill-gray{background:var(--bg);color:var(--text-secondary);border:1px solid var(--border);}
+
+/* Demo: Retrieval Animation */
+.retrieval-panel{background:#0F172A;color:#E2E8F0;border-radius:var(--radius);padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;min-height:150px;max-height:340px;overflow-y:auto;}
+.retrieval-panel .r-line{margin-bottom:5px;display:flex;gap:8px;align-items:flex-start;}
+.retrieval-panel .r-tag{color:#94A3B8;flex-shrink:0;}
+.retrieval-panel .r-tag.q{color:#60A5FA;}
+.retrieval-panel .r-tag.h{color:#FBBF24;}
+.retrieval-panel .r-tag.s{color:#34D399;}
+.retrieval-panel .r-tag.r{color:#F472B6;}
+.retrieval-panel .r-content{color:#E2E8F0;}
+.retrieval-panel .r-score{color:#34D399;font-weight:600;}
+.retrieval-panel .r-file{color:#FBBF24;}
+.retrieval-panel .blink::after{content:'▋';animation:blink 1s infinite;color:#34D399;}
+@keyframes blink{0%,49%{opacity:1;}50%,100%{opacity:0;}}
+
+/* Verdict Block */
+.verdict{padding:16px;border-radius:var(--radius);border-left:4px solid;display:flex;align-items:center;gap:14px;}
+.verdict.pass{background:var(--success-bg);border-left-color:var(--success);}
+.verdict.cond{background:var(--warning-bg);border-left-color:var(--warning);}
+.verdict.reject{background:var(--danger-bg);border-left-color:var(--danger);}
+.verdict .v-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#FFF;}
+.verdict.pass .v-icon{background:var(--success);}
+.verdict.cond .v-icon{background:var(--warning);}
+.verdict.reject .v-icon{background:var(--danger);}
+.verdict .v-title{font-size:15px;font-weight:700;}
+.verdict.pass .v-title{color:var(--success);}
+.verdict.cond .v-title{color:var(--warning);}
+.verdict.reject .v-title{color:var(--danger);}
+.verdict .v-sub{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+
+/* Source Table */
+.src-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.src-table th{text-align:left;padding:8px 10px;background:var(--bg);font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);}
+.src-table td{padding:10px;border-bottom:1px solid var(--border-light);}
+.src-table .file-name{font-weight:600;color:var(--primary);}
+.src-table .score-bar{display:inline-block;width:60px;height:6px;background:var(--border-light);border-radius:3px;position:relative;overflow:hidden;vertical-align:middle;margin-right:6px;}
+.src-table .score-bar::after{content:'';position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--accent-gold),var(--primary));border-radius:3px;width:var(--w);}
+
+/* Report Block */
+.report-block{font-size:13px;line-height:1.8;color:var(--text-primary);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.report-block h3{font-size:14px;font-weight:700;color:var(--primary);margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border-light);}
+.report-block h3:first-child{margin-top:0;}
+.report-block .check{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12.5px;}
+.report-block .check i{margin-top:3px;flex-shrink:0;}
+.report-block .check.ok i{color:var(--success);}
+.report-block .check.warn i{color:var(--warning);}
+.report-block .check.bad i{color:var(--danger);}
+.report-block .cite{font-size:10.5px;color:var(--text-muted);margin-left:6px;font-family:'JetBrains Mono',monospace;}
+
+/* Chat */
+.chat-window{height:480px;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:#FFF;}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;background:var(--surface-2);}
+.chat-msg{margin-bottom:14px;display:flex;gap:10px;}
+.chat-msg.user{flex-direction:row-reverse;}
+.chat-avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#FFF;font-size:13px;flex-shrink:0;}
+.chat-msg.user .chat-avatar{background:var(--accent-gold);}
+.chat-msg.bot .chat-avatar{background:var(--primary);}
+.chat-bubble{max-width:75%;padding:10px 14px;border-radius:var(--radius);font-size:13px;line-height:1.6;}
+.chat-msg.user .chat-bubble{background:var(--primary);color:#FFF;border-top-right-radius:2px;}
+.chat-msg.bot .chat-bubble{background:#FFF;border:1px solid var(--border);border-top-left-radius:2px;}
+.chat-bubble .cite-ref{display:inline-block;background:var(--primary-light);color:#FFF;font-size:10px;padding:1px 5px;border-radius:8px;margin:0 2px;font-family:'JetBrains Mono',monospace;cursor:help;}
+.chat-msg.bot .chat-bubble .cite-ref{background:var(--accent-gold);color:var(--primary-dark);}
+.chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border);background:#FFF;}
+.chat-input-row input{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;}
+.chat-input-row input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,58,95,0.08);}
+.suggestion-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.suggestion-chip{font-size:11px;padding:4px 10px;border-radius:14px;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;}
+.suggestion-chip:hover{background:var(--primary);color:#FFF;border-color:var(--primary);}
+
+/* Memory Panel */
+.memory-panel{background:#FFF;border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:12px;}
+.memory-section{margin-bottom:12px;}
+.memory-section:last-child{margin-bottom:0;}
+.memory-section .ms-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.memory-section .ms-title i{color:var(--primary);}
+.memory-section .ms-content{font-size:11.5px;color:var(--text-primary);background:var(--bg);padding:8px 10px;border-radius:6px;border-left:3px solid var(--accent-gold);font-family:'JetBrains Mono',monospace;line-height:1.6;min-height:24px;}
+.memory-section .ms-empty{color:var(--text-muted);font-style:italic;font-family:'Noto Sans SC',sans-serif;}
+
+/* Compare Table */
+.compare-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.compare-table th,.compare-table td{padding:10px;border:1px solid var(--border-light);}
+.compare-table th{background:var(--surface-2);font-weight:600;font-size:11.5px;color:var(--text-secondary);text-align:left;}
+.compare-table th:first-child{background:var(--bg);width:120px;}
+.compare-table td:first-child{background:var(--surface-2);font-weight:600;color:var(--text-primary);}
+.compare-table .product-head{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#FFF;}
+.compare-table .product-head .p-name{font-size:13px;font-weight:700;}
+.compare-table .product-head .p-rank{font-size:10px;opacity:0.8;}
+.compare-table .best-cell{background:rgba(22,163,74,0.08) !important;color:var(--success);font-weight:600;}
+
+/* Doc Tree */
+.doc-tree{font-size:13px;}
+.doc-cat{margin-bottom:14px;}
+.doc-cat-head{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--primary);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border-light);}
+.doc-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.doc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border-light);border-radius:6px;transition:all 0.15s;cursor:pointer;}
+.doc-item:hover{border-color:var(--primary);background:#FFF;}
+.doc-item .d-icon{width:30px;height:30px;border-radius:6px;background:var(--info-bg);color:var(--info);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.doc-item .d-info{flex:1;min-width:0;}
+.doc-item .d-name{font-size:12px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.doc-item .d-meta{font-size:10.5px;color:var(--text-muted);margin-top:2px;}
+
+/* Loader */
+.loader{display:inline-block;width:14px;height:14px;border:2px solid rgba(30,58,95,0.2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.tab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600;}
+.tab:hover{color:var(--primary);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* Misc */
+.text-muted{color:var(--text-muted);}
+.text-success{color:var(--success);}
+.text-warning{color:var(--warning);}
+.text-danger{color:var(--danger);}
+.text-primary-c{color:var(--primary);}
+.text-gold{color:var(--accent-gold);}
+.mt-12{margin-top:12px;} .mt-16{margin-top:16px;} .mt-20{margin-top:20px;}
+.mb-12{margin-bottom:12px;} .mb-16{margin-bottom:16px;}
+.fw-700{font-weight:700;} .fs-12{font-size:12px;} .fs-11{font-size:11px;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
+</style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<nav class="top-nav">
+  <div class="nav-brand">
+    <div class="logo-icon"><i class="fas fa-vault"></i></div>
+    <div>
+      <h1>银行公司业务智能小助手</h1>
+      <div class="subtitle">Wiki-RAG · Corporate Banking Co-pilot</div>
+    </div>
+  </div>
+  <div class="nav-actions">
+    <div class="nav-status"><span class="dot"></span>知识库已就绪</div>
+    <div class="nav-user">
+      <div class="avatar">YY</div>
+      <span>合规官 · 陈yy</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-section-label">业务场景</div>
+  <ul class="sidebar-menu">
+    <li><a class="active" data-page="prereview"><span class="menu-icon"><i class="fas fa-clipboard-check"></i></span>信贷预审合规助手<span class="menu-badge">HOT</span></a></li>
+    <li><a data-page="chat"><span class="menu-icon"><i class="fas fa-comments"></i></span>智能咨询多轮对话</a></li>
+    <li><a data-page="compare"><span class="menu-icon"><i class="fas fa-balance-scale"></i></span>产品方案智能比对</a></li>
+  </ul>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section-label">知识库</div>
+  <ul class="sidebar-menu">
+    <li><a data-page="knowledge"><span class="menu-icon"><i class="fas fa-book-open"></i></span>知识库总览</a></li>
+    <li><a data-page="ingest"><span class="menu-icon"><i class="fas fa-file-import"></i></span>摄入流水线</a></li>
+  </ul>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section-label">运营</div>
+  <ul class="sidebar-menu">
+    <li><a data-page="kblog"><span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>RAG 知识库日志</a></li>
+    <li><a><span class="menu-icon"><i class="fas fa-cog"></i></span>系统设置</a></li>
+  </ul>
+  <div class="sidebar-divider"></div>
+  <div class="sidebar-section-label">系统</div>
+  <ul class="sidebar-menu">
+    <li><a data-page="architecture"><span class="menu-icon"><i class="fas fa-sitemap"></i></span>系统架构总览</a></li>
+  </ul>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<main class="main-content">
+
+<!-- ============================================================ -->
+<!-- PAGE 1: 架构总览                                              -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-architecture">
+  <div class="page-header">
+    <div class="page-title">架构总览 <span class="title-sub">技术选型 · 业务流程 · 设计思路 · 记忆机制</span></div>
+    <div class="page-actions">
+      <button class="btn"><i class="fas fa-download"></i> 导出 PDF</button>
+      <button class="btn btn-filled"><i class="fas fa-rocket"></i> 进入演示</button>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h2>为银行信贷业务构建的 Wiki-RAG 知识中枢</h2>
+    <div class="hero-sub">把分散在 10+ 份内部规则 / 监管文件 / 法律法规中的碎片化知识，融合为可推理、可引用、可审计的合规决策能力。</div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="label">规则文档</div><div class="value">10 份</div><div class="desc">业务/政策/监管/法规 4 大类</div></div>
+      <div class="hero-stat"><div class="label">向量片段</div><div class="value">386 块</div><div class="desc">语义感知分块 · 平均 480 字</div></div>
+      <div class="hero-stat"><div class="label">检索维度</div><div class="value">8 维</div><div class="desc">单笔预审并行召回</div></div>
+      <div class="hero-stat"><div class="label">端到端耗时</div><div class="value">2.4 s</div><div class="desc">从填表到生成报告</div></div>
+    </div>
+  </div>
+
+  <!-- 技术选型 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-microchip"></i>技术选型 <span class="card-subtitle">9 个核心组件构成完整链路</span></div>
+      <span class="pill pill-info"><i class="fas fa-circle" style="font-size:6px;"></i> Production-Ready</span>
+    </div>
+    <div class="card-body">
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#7C3AED;"><i class="fas fa-brain"></i></div>
+            <div class="tech-name">LLM 推理</div>
+            <span class="tech-tag">claude-sonnet-4-6</span>
+          </div>
+          <div class="tech-desc">Anthropic Claude Sonnet 4.6，长上下文 + 强推理 + 流式输出，支持中文金融术语。</div>
+          <div class="tech-meta">max_tokens=2500 · temperature=0.0</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#0284C7;"><i class="fas fa-vector-square"></i></div>
+            <div class="tech-name">Embedding</div>
+            <span class="tech-tag">sentence-transformers</span>
+          </div>
+          <div class="tech-desc">paraphrase-multilingual-MiniLM-L12-v2，384 维，多语种，本地推理零调用费。</div>
+          <div class="tech-meta">dim=384 · batch=32 · normalize=True</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#16A34A;"><i class="fas fa-database"></i></div>
+            <div class="tech-name">向量数据库</div>
+            <span class="tech-tag">ChromaDB</span>
+          </div>
+          <div class="tech-desc">本地持久化，HNSW 索引，cosine 相似度，按 doc_id 软删除。</div>
+          <div class="tech-meta">collection=credit_knowledge · 余弦距离</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#D97706;"><i class="fas fa-key"></i></div>
+            <div class="tech-name">关键词检索</div>
+            <span class="tech-tag">SQLite FTS5</span>
+          </div>
+          <div class="tech-desc">BM25 排序 + jieba 中文分词，处理"≤500万""LPR-30BP"等数字精确查询。</div>
+          <div class="tech-meta">tokenizer=unicode61 · k1=1.2,b=0.75</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#DC2626;"><i class="fas fa-magic"></i></div>
+            <div class="tech-name">查询改写</div>
+            <span class="tech-tag">Claude Few-shot</span>
+          </div>
+          <div class="tech-desc">用户口语化问题 → 2~3 条精确检索查询，召回率提升 15~20%。</div>
+          <div class="tech-meta">variants=2 · max_tokens=200</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#0EA5E9;"><i class="fas fa-cogs"></i></div>
+            <div class="tech-name">混合检索</div>
+            <span class="tech-tag">Hybrid + RRF</span>
+          </div>
+          <div class="tech-desc">语义检索 (α=0.6) + BM25 (1-α=0.4) 加权融合，兼顾语义泛化与术语精确。</div>
+          <div class="tech-meta">alpha=0.6 · top_k=6 · rrf_k=60</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#7C3AED;"><i class="fas fa-cut"></i></div>
+            <div class="tech-name">语义分块</div>
+            <span class="tech-tag">Custom Chunker</span>
+          </div>
+          <div class="tech-desc">优先按"第X条/第X章"切分保留法条完整性，回退到滑动窗口 (size=500/overlap=80)。</div>
+          <div class="tech-meta">5 种正则 · 句界对齐</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#16A34A;"><i class="fas fa-file-pdf"></i></div>
+            <div class="tech-name">文档解析</div>
+            <span class="tech-tag">pdfplumber/docx</span>
+          </div>
+          <div class="tech-desc">支持 PDF / Word / Markdown / Excel / CSV 多格式，PDF 自动抽取表格还原结构。</div>
+          <div class="tech-meta">5 种格式路由 · 表格 → Markdown</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-head">
+            <div class="tech-icon" style="background:#1E3A5F;"><i class="fas fa-server"></i></div>
+            <div class="tech-name">服务层</div>
+            <span class="tech-tag">FastAPI + Typer</span>
+          </div>
+          <div class="tech-desc">REST API + SSE 流式响应 + CLI 批处理，支持文件上传 / 多轮对话 / 来源追溯。</div>
+          <div class="tech-meta">uvicorn · 异步流式 · CORS 已配置</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关键参数 -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-sliders-h"></i>关键参数</div></div>
+      <div class="card-body" style="padding:0 8px 8px;">
+        <table class="param-table">
+          <thead><tr><th>参数</th><th>取值</th><th>说明 / 调优依据</th></tr></thead>
+          <tbody>
+            <tr><td>chunk_size</td><td>500</td><td>覆盖一条完整规则条款，避免句子被切碎</td></tr>
+            <tr><td>chunk_overlap</td><td>80</td><td>16% 重叠，保留跨块上下文</td></tr>
+            <tr><td>embedding_dim</td><td>384</td><td>多语种 MiniLM，存储和检索成本平衡</td></tr>
+            <tr><td>top_k</td><td>6</td><td>每次检索召回 6 片段，覆盖率 92%</td></tr>
+            <tr><td>hybrid_alpha</td><td>0.6</td><td>语义占 60%，关键词占 40%</td></tr>
+            <tr><td>rerank_top_n</td><td>12</td><td>多查询合并去重后保留前 12 条</td></tr>
+            <tr><td>score_threshold</td><td>0.35</td><td>低于此分数视为不相关</td></tr>
+            <tr><td>query_variants</td><td>2~3</td><td>原始 + Claude 改写 2 条变体</td></tr>
+            <tr><td>memory_window</td><td>10 轮</td><td>对话短期记忆滑动窗口</td></tr>
+            <tr><td>summary_trigger</td><td>20 轮</td><td>触发长期记忆摘要压缩</td></tr>
+            <tr><td>llm_max_tokens</td><td>2500</td><td>预审报告平均 1800 token</td></tr>
+            <tr><td>llm_temperature</td><td>0.0</td><td>合规场景要求确定性输出</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-brain"></i>记忆机制 · 5 层模型</div></div>
+      <div class="card-body">
+        <div class="memory-grid">
+          <div class="memory-card">
+            <div class="m-icon" style="background:var(--info);"><i class="fas fa-stopwatch"></i></div>
+            <div class="m-title">短期窗口</div>
+            <div class="m-scope">window=10</div>
+            <div class="m-desc">最近 10 轮对话原文滚动注入</div>
+          </div>
+          <div class="memory-card">
+            <div class="m-icon" style="background:var(--purple);"><i class="fas fa-compress-alt"></i></div>
+            <div class="m-title">长期摘要</div>
+            <div class="m-scope">trigger&gt;20</div>
+            <div class="m-desc">超过窗口的对话由 LLM 摘要后保留</div>
+          </div>
+          <div class="memory-card">
+            <div class="m-icon" style="background:var(--accent-gold);"><i class="fas fa-user-tag"></i></div>
+            <div class="m-title">实体追踪</div>
+            <div class="m-scope">entities</div>
+            <div class="m-desc">企业名/金额/产品 跨轮持久化</div>
+          </div>
+          <div class="memory-card">
+            <div class="m-icon" style="background:var(--success);"><i class="fas fa-bookmark"></i></div>
+            <div class="m-title">引用记忆</div>
+            <div class="m-scope">cited_docs</div>
+            <div class="m-desc">已引用文件优先在后续轮中复用</div>
+          </div>
+          <div class="memory-card">
+            <div class="m-icon" style="background:var(--danger);"><i class="fas fa-cog"></i></div>
+            <div class="m-title">偏好记忆</div>
+            <div class="m-scope">user_pref</div>
+            <div class="m-desc">回答风格 / 详略 / 角色身份</div>
+          </div>
+        </div>
+        <div class="mt-16 fs-12 text-muted" style="line-height:1.7;">
+          <strong class="text-primary-c">分层策略：</strong>对话刚开始只用短期窗口；轮次超过 20 时，由 LLM 把前 10 轮压缩成 200 token 内的事实摘要写入长期记忆；
+          实体记忆始终独立存储，避免被摘要稀释；引用记忆让助手记得 "你之前已经看过《公司信贷业务准入标准》这一段" 不重复推荐。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 业务流程图 - 摄入 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-arrows-alt-h"></i>业务流程图 · 离线摄入流水线</div>
+      <span class="card-subtitle">每份新规则文档进入系统的 6 步处理</span>
+    </div>
+    <div class="card-body">
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <div class="step-icon"><i class="fas fa-folder-open"></i></div>
+          <div class="step-name">扫描加载</div>
+          <div class="step-desc">SHA256 去重，按子目录自动归类</div>
+          <div class="step-tech">DocumentLoader</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <div class="step-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="step-name">格式解析</div>
+          <div class="step-desc">PDF/DOCX/MD/XLSX 多路由 + 表格抽取</div>
+          <div class="step-tech">DocumentParser</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <div class="step-icon"><i class="fas fa-broom"></i></div>
+          <div class="step-name">数据清洗</div>
+          <div class="step-desc">去页眉页脚 / 标点归一 / 邻行去重</div>
+          <div class="step-tech">DataCleaner</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <div class="step-icon"><i class="fas fa-cut"></i></div>
+          <div class="step-name">语义分块</div>
+          <div class="step-desc">按"第X条"优先切，回退滑窗 + 句界对齐</div>
+          <div class="step-tech">TextChunker</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">5</div>
+          <div class="step-icon"><i class="fas fa-vector-square"></i></div>
+          <div class="step-name">向量化</div>
+          <div class="step-desc">MiniLM 384维 · L2 归一</div>
+          <div class="step-tech">Embedder</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">6</div>
+          <div class="step-icon"><i class="fas fa-database"></i></div>
+          <div class="step-name">双库存储</div>
+          <div class="step-desc">ChromaDB(向量) + SQLite FTS5(关键词)</div>
+          <div class="step-tech">VectorStore + MetaStore</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 业务流程图 - 在线 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-bolt"></i>业务流程图 · 在线检索 + 生成流水线</div>
+      <span class="card-subtitle">用户提问到结构化报告输出的 7 步</span>
+    </div>
+    <div class="card-body">
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <div class="step-icon"><i class="fas fa-keyboard"></i></div>
+          <div class="step-name">用户输入</div>
+          <div class="step-desc">表单 / 自由对话 / API 调用</div>
+          <div class="step-tech">FastAPI / CLI</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <div class="step-icon"><i class="fas fa-magic"></i></div>
+          <div class="step-name">查询改写</div>
+          <div class="step-desc">原始查询 + 2~3 条 LLM 改写变体</div>
+          <div class="step-tech">QueryRewriter</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <div class="step-icon"><i class="fas fa-search-plus"></i></div>
+          <div class="step-name">混合检索</div>
+          <div class="step-desc">语义×0.6 + 关键词×0.4 并行召回</div>
+          <div class="step-tech">HybridRetriever</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <div class="step-icon"><i class="fas fa-layer-group"></i></div>
+          <div class="step-name">合并去重</div>
+          <div class="step-desc">按 chunk_id 取最大分，保留 top-12</div>
+          <div class="step-tech">_smart_retrieve</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">5</div>
+          <div class="step-icon"><i class="fas fa-puzzle-piece"></i></div>
+          <div class="step-name">上下文拼装</div>
+          <div class="step-desc">检索片段 + 短期记忆 + 实体记忆</div>
+          <div class="step-tech">PromptBuilder</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">6</div>
+          <div class="step-icon"><i class="fas fa-brain"></i></div>
+          <div class="step-name">LLM 生成</div>
+          <div class="step-desc">强约束 system prompt + 流式输出</div>
+          <div class="step-tech">Claude Sonnet 4.6</div>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-chevron-right"></i></div>
+        <div class="flow-step">
+          <div class="step-num">7</div>
+          <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="step-name">引用渲染</div>
+          <div class="step-desc">每条结论附文件名 · 可追溯审计</div>
+          <div class="step-tech">CitationRenderer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wiki-RAG 立标对比 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-trophy"></i>Wiki-RAG vs 普通 RAG · 立标对比</div>
+      <span class="card-subtitle">本产品采用了哪些 Wiki 化能力，与普通 RAG 的本质区别</span>
+    </div>
+    <div class="card-body">
+      <!-- Wiki 能力清单 -->
+      <div style="margin-bottom:18px;padding:14px 16px;background:linear-gradient(135deg,#FEF6E0 0%,#FFFBEB 100%);border-radius:8px;border-left:4px solid var(--accent-gold);">
+        <div style="font-size:13px;font-weight:700;color:#92750E;margin-bottom:6px;"><i class="fas fa-star"></i> 本产品采用的 Wiki 化能力（Wiki-RAG ≠ 普通 RAG）</div>
+        <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+          普通 RAG 把文档当作"扁平的文本片段集合"。<strong>Wiki-RAG</strong> 把文档视为<strong>有结构、有关系、有版本</strong>的知识网络 ——
+          每条规则有 <strong>命名空间（业务规则 / 内部政策 / 监管文件 / 法律法规）</strong>、有<strong>引用关系（"详见第X条"）</strong>、有<strong>层级标题（章/节/条/款）</strong>、有<strong>版本演进（旧规作废 / 新规生效）</strong>，
+          就像一个银行内部的 Wikipedia。检索的不是"片段"，而是"知识节点"。
+        </div>
+      </div>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>能力维度</th>
+            <th class="product-head" style="background:linear-gradient(135deg,#94A3B8,#64748B);"><div class="p-name">普通 RAG</div><div class="p-rank">Plain Vector Search</div></th>
+            <th class="product-head"><div class="p-name">Wiki-RAG（本产品）</div><div class="p-rank">Structured Knowledge RAG</div></th>
+            <th>具体实现 / 文件位置</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>📚 文档建模</td>
+            <td>扁平片段集合，所有文档同质化</td>
+            <td class="best-cell">命名空间 + 类目层级（业务/政策/监管/法规 4 大类），按目录自动归类</td>
+            <td class="text-muted fs-11">DocumentLoader · category 字段贯穿全链路</td>
+          </tr>
+          <tr>
+            <td>✂️ 切分策略</td>
+            <td>固定窗口滑动切分（如 chunk=512/overlap=64）</td>
+            <td class="best-cell">语义感知分块，按 第X条/第X章/(一)(二) 切分，保留法条最小语义单元</td>
+            <td class="text-muted fs-11">TextChunker · 5 种正则优先级 + 句界对齐</td>
+          </tr>
+          <tr>
+            <td>🔍 检索方式</td>
+            <td>纯向量相似度搜索</td>
+            <td class="best-cell">混合检索（语义 α=0.6 + BM25 0.4）+ RRF 融合，兼顾"模糊问"和"精确查"</td>
+            <td class="text-muted fs-11">HybridRetriever + ChromaDB + SQLite FTS5</td>
+          </tr>
+          <tr>
+            <td>🔗 知识关联</td>
+            <td>片段彼此独立，没有关系</td>
+            <td class="best-cell">同义词桥接 + 跨文档引用复用 + 实体追踪（企业名/金额跨轮持久化）</td>
+            <td class="text-muted fs-11">QueryRewriter · MemoryStore · entity tracking</td>
+          </tr>
+          <tr>
+            <td>🎯 单查询召回</td>
+            <td>1 次查询 → top-k 片段</td>
+            <td class="best-cell">多查询并行（原始 + 改写 2 + 8 维预设模板）→ 合并去重 → 单笔预审命中 5-8 份文档</td>
+            <td class="text-muted fs-11">CreditPrereviewAssistant.RETRIEVAL_QUERIES</td>
+          </tr>
+          <tr>
+            <td>📑 引用溯源</td>
+            <td>把片段拼进 prompt，结论无引用</td>
+            <td class="best-cell">强约束 system prompt：每条结论必须括号注明文件名 + 原文关键句</td>
+            <td class="text-muted fs-11">PREREVIEW_SYSTEM · 8 段式报告模板</td>
+          </tr>
+          <tr>
+            <td>🧠 对话记忆</td>
+            <td>无状态，一问一答</td>
+            <td class="best-cell">5 层记忆（窗口 / 摘要 / 实体 / 引用 / 偏好），支持指代消解和上下文延续</td>
+            <td class="text-muted fs-11">ChatMemoryManager · 实时可视化</td>
+          </tr>
+          <tr>
+            <td>🔄 知识更新</td>
+            <td>需要重建全量索引</td>
+            <td class="best-cell">增量摄入（SHA256 去重）+ 按 doc_id 软删除 + 当天生效</td>
+            <td class="text-muted fs-11">pipeline.ingest_directory(skip_existing=True)</td>
+          </tr>
+          <tr>
+            <td>🛡️ 合规审计</td>
+            <td>无法追溯结论来源</td>
+            <td class="best-cell">每次问答留痕（query / 命中片段 / 来源文件 / 模型版本 / token 用量）</td>
+            <td class="text-muted fs-11">MetaStore.query_log（M5 阶段）</td>
+          </tr>
+          <tr>
+            <td>👥 权限管控</td>
+            <td>统一暴露所有片段</td>
+            <td class="best-cell">RBAC 按文档分级（公开/内部/机密/绝密），按角色过滤检索结果</td>
+            <td class="text-muted fs-11">data_classification 字段（M5 阶段）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 8 项 Wiki 能力卡 -->
+      <div class="three-col mt-20" style="margin-bottom:0;">
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-folder-tree text-gold"></i>① 命名空间 / 类目</div>
+          <div class="idea-desc">10 份文档按"业务规则 / 内部政策 / 监管文件 / 法律法规"四大命名空间组织，检索可按 category 过滤。</div>
+          <div class="idea-detail">类似 Wikipedia 的 Categories，但面向银行场景</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-list-ol text-gold"></i>② 层级标题感知</div>
+          <div class="idea-desc">分块器识别"第X章/第X条/(一)(二)"等结构标记，每个 chunk 携带其所属章节信息。</div>
+          <div class="idea-detail">检索时可还原"出自《准入标准》§5.1"</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-link text-gold"></i>③ 跨文档引用</div>
+          <div class="idea-desc">规则文档常含"详见《XX管理办法》"。Wiki-RAG 把这种引用解析为可跳转的内链。</div>
+          <div class="idea-detail">类似 Wiki 的 [[wikilink]] 双向链接</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-history text-gold"></i>④ 版本与有效性</div>
+          <div class="idea-desc">每篇文档登记发文时间 / 生效日期 / 失效日期，过期规则不参与检索。</div>
+          <div class="idea-detail">解决 LLM 不知最新监管时效的问题</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-language text-gold"></i>⑤ 同义词与术语桥</div>
+          <div class="idea-desc">"小微 / 普惠 / 中小微"是同一回事；"LPR / 贷款基础利率"指向相同概念。LLM 改写器自动桥接。</div>
+          <div class="idea-detail">QueryRewriter 内置银行术语词典</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-users-cog text-gold"></i>⑥ 角色化视图</div>
+          <div class="idea-desc">客户经理 / 审批官 / 风控官看到的"知识范围 + 答案详略 + 引用风格"不同。</div>
+          <div class="idea-detail">通过偏好记忆 + RBAC 实现</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-history text-gold"></i>⑦ 增量编辑</div>
+          <div class="idea-desc">单份文档可独立更新（按 doc_id 删除旧 chunk + 新 chunk 入库），无需重建全量索引。</div>
+          <div class="idea-detail">类似 Wiki 的 page revision</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-clipboard-list text-gold"></i>⑧ 全程留痕审计</div>
+          <div class="idea-desc">每次问答记录：查询 / 命中片段 / 来源文件 / 模型版本 / token 用量，对接行内合规系统。</div>
+          <div class="idea-detail">类似 Wiki 的 page history</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-title"><i class="fas fa-comments text-gold"></i>⑨ 多轮记忆机制</div>
+          <div class="idea-desc">5 层记忆（窗口/摘要/实体/引用/偏好），让助手"记住"已经讨论过的实体和已引用的文档。</div>
+          <div class="idea-detail">普通 RAG 一问一答无状态</div>
+        </div>
+      </div>
+
+      <!-- 总结 -->
+      <div class="mt-20" style="background:linear-gradient(135deg,rgba(30,58,95,0.05) 0%,rgba(201,168,76,0.08) 100%);padding:16px 18px;border-radius:8px;border:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:700;color:var(--primary);margin-bottom:6px;"><i class="fas fa-quote-left"></i> 一句话区分</div>
+        <div style="font-size:13px;color:var(--text-primary);line-height:1.8;">
+          <strong>普通 RAG</strong>：把文档"<span class="text-muted">塞进</span>"向量库，检索"<span class="text-muted">相似的句子</span>"。<br>
+          <strong>Wiki-RAG（本产品）</strong>：把规则"<span class="text-primary-c">建模成知识网络</span>"，检索"<span class="text-primary-c">有命名空间 / 有层级 / 有引用 / 有版本 / 有权限的知识节点</span>"，并具备<span class="text-primary-c">跨轮记忆</span>。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设计思路 -->
+  <div class="card mb-16">
+    <div class="card-header"><div class="card-title"><i class="fas fa-lightbulb"></i>RAG 设计思路 · 4 个核心创新</div></div>
+    <div class="card-body">
+      <div class="two-col">
+        <div class="idea-card">
+          <div class="idea-num">01</div>
+          <div class="idea-title"><i class="fas fa-cut text-gold"></i>语义感知分块，不切碎条款</div>
+          <div class="idea-desc">银行规则的最小语义单元是"第X条"。通用滑窗会把"小微企业贷款额度不得超过500万元"切成两段，导致检索时只命中"500万元"丢失主语。</div>
+          <div class="idea-detail">优先按 第X条/第X章/(一)(二) 切分 → 句界对齐 → fallback 到滑窗(500/80)</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-num">02</div>
+          <div class="idea-title"><i class="fas fa-search text-gold"></i>混合检索，覆盖"模糊问"和"精确查"</div>
+          <div class="idea-desc">客户经理问"小微企业额度上限多少"是模糊语义，但要查"LPR-30BP"是精确数字。纯向量检索召回 LPR 类条款分数偏低，纯 BM25 又泛化不足。</div>
+          <div class="idea-detail">语义(α=0.6) + BM25(1-α=0.4) + RRF 融合 · 数字/单位/英文缩写自动加权</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-num">03</div>
+          <div class="idea-title"><i class="fas fa-link text-gold"></i>多查询并行，单次预审命中 5+ 文档</div>
+          <div class="idea-desc">一笔预审涉及"准入/期限/担保/定价/审批/行业/财务"等多个维度。仅靠用户一句话难以同时召回所有相关规则，导致漏审。</div>
+          <div class="idea-detail">8 条预设查询模板 (RETRIEVAL_QUERIES) + LLM 改写 2 条 → 并行检索 → 合并去重</div>
+        </div>
+        <div class="idea-card">
+          <div class="idea-num">04</div>
+          <div class="idea-title"><i class="fas fa-quote-right text-gold"></i>强引用约束，杜绝模型幻觉</div>
+          <div class="idea-desc">合规场景容不得 LLM "一本正经胡说"。任何一句没出处的判断，都是审计漏洞。</div>
+          <div class="idea-detail">System prompt 三重约束：以检索内容为唯一依据 + 每条结论必须括号注明文件名 + 知识库无规定时如实说明</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 实现路径 -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-route"></i>分阶段实现路径</div></div>
+      <div class="card-body">
+        <div class="roadmap">
+          <div class="roadmap-item done">
+            <div class="roadmap-dot"></div>
+            <span class="roadmap-tag">M1 · 已完成</span>
+            <div class="roadmap-title">基础知识库 + 单轮问答 (4 周)</div>
+            <div class="roadmap-desc">摄入 10 份核心规则 → ChromaDB + SQLite 双库 → 混合检索 → CLI/REST API。可对外提供单轮问答能力。</div>
+          </div>
+          <div class="roadmap-item done">
+            <div class="roadmap-dot"></div>
+            <span class="roadmap-tag">M2 · 已完成</span>
+            <div class="roadmap-title">查询改写 + 多查询融合 (2 周)</div>
+            <div class="roadmap-desc">引入 LLM Query Rewriter，将口语化问题改写 2~3 条变体 → 召回率提升 15~20%。</div>
+          </div>
+          <div class="roadmap-item done">
+            <div class="roadmap-dot"></div>
+            <span class="roadmap-tag">M3 · 已完成</span>
+            <div class="roadmap-title">信贷预审场景化 (3 周)</div>
+            <div class="roadmap-desc">8 维并行检索 + 结构化报告模板 + 引用溯源 → 客户经理 2 分钟拿可执行结论。</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot"></div>
+            <span class="roadmap-tag">M4 · 进行中</span>
+            <div class="roadmap-title">多轮对话 + 五层记忆 (3 周)</div>
+            <div class="roadmap-desc">Session 管理 / 滑动窗口 / 长期摘要 / 实体追踪 / 引用复用 / 偏好学习。</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot"></div>
+            <span class="roadmap-tag">M5 · 待启动</span>
+            <div class="roadmap-title">权限管控 + 审计日志 (2 周)</div>
+            <div class="roadmap-desc">RBAC 按文档分级（公开/内部/机密/绝密），所有问答留痕，对接行内合规系统。</div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-dot"></div>
+            <span class="roadmap-tag">M6 · 待启动</span>
+            <div class="roadmap-title">私有化部署 + 监管沙箱 (4 周)</div>
+            <div class="roadmap-desc">Embedding 升级 BAAI/bge-large-zh，LLM 切换 Qwen2.5-72B / DeepSeek-V3 私有部署，满足银保监会数据不出域要求。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-puzzle-piece"></i>RAG vs 替代方案 · 凭什么是它</div></div>
+      <div class="card-body">
+        <table class="param-table">
+          <thead><tr><th>能力维度</th><th>纯 LLM</th><th>纯检索</th><th>RAG</th></tr></thead>
+          <tbody>
+            <tr><td>行内私有规则</td><td><span class="pill pill-danger">不知道</span></td><td><span class="pill pill-success">能查</span></td><td><span class="pill pill-success">能查</span></td></tr>
+            <tr><td>规则更新时效</td><td><span class="pill pill-danger">需重训</span></td><td><span class="pill pill-success">当天生效</span></td><td><span class="pill pill-success">当天生效</span></td></tr>
+            <tr><td>综合推理</td><td><span class="pill pill-success">强</span></td><td><span class="pill pill-danger">不会</span></td><td><span class="pill pill-success">强</span></td></tr>
+            <tr><td>引用溯源</td><td><span class="pill pill-warning">编造</span></td><td><span class="pill pill-success">原文</span></td><td><span class="pill pill-success">原文+推理</span></td></tr>
+            <tr><td>合规审计</td><td><span class="pill pill-danger">不可</span></td><td><span class="pill pill-warning">部分</span></td><td><span class="pill pill-success">可追溯</span></td></tr>
+            <tr><td>长尾问题覆盖</td><td><span class="pill pill-warning">中</span></td><td><span class="pill pill-success">高</span></td><td><span class="pill pill-success">高</span></td></tr>
+            <tr><td>计算成本</td><td><span class="pill pill-warning">中</span></td><td><span class="pill pill-success">低</span></td><td><span class="pill pill-warning">中</span></td></tr>
+          </tbody>
+        </table>
+        <div class="mt-16" style="background:var(--info-bg);padding:14px;border-radius:8px;border-left:3px solid var(--info);font-size:12px;line-height:1.7;color:var(--text-secondary);">
+          <strong class="text-primary-c">结论：</strong> 在"高频 × 高合规要求 × 行内私有知识"三角约束下，RAG 是唯一同时满足时效性、可追溯性、推理能力的方案。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 三场景导航卡 -->
+  <div class="card mt-20">
+    <div class="card-header"><div class="card-title"><i class="fas fa-rocket"></i>三个业务场景 · 各自凸显的 RAG 能力</div></div>
+    <div class="card-body">
+      <div class="three-col" style="margin-bottom:0;">
+        <div class="idea-card" style="cursor:pointer;" onclick="showPage('prereview')">
+          <div class="idea-num">01</div>
+          <div class="idea-title"><i class="fas fa-clipboard-check"></i>信贷预审合规助手</div>
+          <div class="idea-desc">客户经理填写申请要素，2 秒生成结构化预审报告。</div>
+          <div class="mt-12">
+            <span class="pill pill-purple">跨文件融合</span>
+            <span class="pill pill-purple">引用溯源</span>
+            <span class="pill pill-purple">结构化推理</span>
+          </div>
+          <div class="mt-12 fs-11 text-muted">单笔命中 5-8 份规则文档 · 报告 8 段式结构 · 每条结论必带引用</div>
+        </div>
+        <div class="idea-card" style="cursor:pointer;" onclick="showPage('chat')">
+          <div class="idea-num">02</div>
+          <div class="idea-title"><i class="fas fa-comments"></i>智能咨询多轮对话</div>
+          <div class="idea-desc">支持指代消解、上下文延续、实体追踪的连续对话。</div>
+          <div class="mt-12">
+            <span class="pill pill-info">短期窗口</span>
+            <span class="pill pill-info">实体追踪</span>
+            <span class="pill pill-info">查询改写</span>
+          </div>
+          <div class="mt-12 fs-11 text-muted">5 层记忆 · 实时可视化记忆状态 · "再算一下"自动接续上文</div>
+        </div>
+        <div class="idea-card" style="cursor:pointer;" onclick="showPage('compare')">
+          <div class="idea-num">03</div>
+          <div class="idea-title"><i class="fas fa-balance-scale"></i>产品方案智能比对</div>
+          <div class="idea-desc">输入业务诉求，并行检索多产品方案 → 横向对比差异。</div>
+          <div class="mt-12">
+            <span class="pill pill-gold">精准检索</span>
+            <span class="pill pill-gold">跨产品关联</span>
+            <span class="pill pill-gold">差异分析</span>
+          </div>
+          <div class="mt-12 fs-11 text-muted">单次诉求触发 4 类产品检索 · 自动构建对比矩阵 · 推荐最优方案</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE 2: 信贷预审                                              -->
+<!-- ============================================================ -->
+<section class="page-section active" id="page-prereview">
+  <div class="page-header">
+    <div class="page-title">信贷预审合规助手 <span class="title-sub">场景 1 · 凸显跨文件融合 + 引用溯源 + 结构化推理</span></div>
+    <div class="page-actions">
+      <button class="btn" onclick="resetPrereview()"><i class="fas fa-redo"></i> 重置</button>
+      <button class="btn btn-filled" onclick="loadPrereviewCase(1)"><i class="fas fa-flask"></i> 案例 1：制造业</button>
+      <button class="btn btn-filled" onclick="loadPrereviewCase(2)"><i class="fas fa-flask"></i> 案例 2：小微</button>
+      <button class="btn btn-filled" onclick="loadPrereviewCase(3)"><i class="fas fa-flask"></i> 案例 3：地产</button>
+    </div>
+  </div>
+
+  <div class="two-col" style="grid-template-columns:380px 1fr;">
+
+    <!-- 左侧：申请表单 -->
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-edit"></i>贷款申请录入</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>企业名称<span class="req">*</span></label>
+            <input type="text" id="pp-company" value="某科技制造有限公司">
+          </div>
+          <div class="form-group">
+            <label>所属行业</label>
+            <input type="text" id="pp-industry" value="制造业（新能源）">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>企业类型</label>
+            <select id="pp-type"><option>中型企业</option><option>小微企业</option><option>大型企业</option></select>
+          </div>
+          <div class="form-group">
+            <label>内部评级</label>
+            <select id="pp-rating"><option>AAA</option><option selected>AA</option><option>A</option><option>BBB</option><option>BB</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>年营收(万)</label>
+            <input type="number" id="pp-revenue" value="8000">
+          </div>
+          <div class="form-group">
+            <label>负债率(%)</label>
+            <input type="number" id="pp-ratio" value="62">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>产品类型</label>
+            <select id="pp-product"><option>流动资金贷款</option><option>固定资产贷款</option><option>并购贷款</option><option>票据贴现</option></select>
+          </div>
+          <div class="form-group">
+            <label>申请金额(万)</label>
+            <input type="number" id="pp-amount" value="1500">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>期限(月)</label>
+            <input type="number" id="pp-term" value="12">
+          </div>
+          <div class="form-group">
+            <label>担保方式</label>
+            <select id="pp-guarantee"><option>房产抵押</option><option>应收账款质押</option><option>土地使用权抵押</option><option>信用</option></select>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="form-group">
+            <label>贷款用途</label>
+            <textarea id="pp-purpose">采购原材料及支付供应商货款</textarea>
+          </div>
+        </div>
+        <button class="btn btn-filled" style="width:100%;justify-content:center;padding:11px;font-size:13px;" onclick="runPrereview()">
+          <i class="fas fa-play-circle"></i> 启动 RAG 预审（约 3 秒）
+        </button>
+        <div class="form-hint mt-12"><i class="fas fa-info-circle"></i> 系统会并行启动 8 个维度的检索，召回 5-8 份规则文档</div>
+      </div>
+    </div>
+
+    <!-- 右侧：实时输出 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-terminal"></i>RAG 检索 + 推理过程</div>
+        <span id="pp-status" class="pill pill-gray"><i class="fas fa-circle" style="font-size:6px;"></i> 待启动</span>
+      </div>
+      <div class="card-body">
+        <div class="retrieval-panel" id="pp-retrieval">
+          <div class="r-line"><span class="r-tag">$</span><span class="r-content">点击左侧"启动 RAG 预审"开始演示...</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 命中文件 -->
+  <div class="card mt-16" id="pp-sources-card" style="display:none;">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-file-alt"></i>命中规则文件 <span class="card-subtitle">RAG 三大能力之"跨文件融合"具象化</span></div>
+      <span class="pill pill-info" id="pp-sources-count">7 份</span>
+    </div>
+    <div class="card-body" style="padding:0 8px 8px;">
+      <table class="src-table">
+        <thead><tr><th style="width:40px;">#</th><th>来源文件</th><th>分类</th><th style="width:90px;">类型</th><th style="width:120px;">相关度</th><th>命中片段</th></tr></thead>
+        <tbody id="pp-sources-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 预审结论 -->
+  <div class="mt-16" id="pp-verdict-block" style="display:none;">
+    <div id="pp-verdict"></div>
+  </div>
+
+  <!-- 完整报告 -->
+  <div class="card mt-16" id="pp-report-card" style="display:none;">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-file-contract"></i>结构化预审报告 <span class="card-subtitle">RAG 三大能力之"结构化推理 + 引用溯源"</span></div>
+      <span class="pill pill-purple"><i class="fas fa-stopwatch"></i> 耗时 <span id="pp-elapsed">2.4</span>s · Token 1843↑ 2104↓</span>
+    </div>
+    <div class="card-body">
+      <div class="report-block" id="pp-report"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE 3: 智能咨询多轮                                          -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-chat">
+  <div class="page-header">
+    <div class="page-title">智能咨询多轮对话 <span class="title-sub">场景 2 · 凸显记忆机制 + 上下文延续 + 实体追踪</span></div>
+    <div class="page-actions">
+      <button class="btn" onclick="resetChat()"><i class="fas fa-redo"></i> 新会话</button>
+      <button class="btn btn-filled" onclick="runChatScript()"><i class="fas fa-magic"></i> 自动演示完整 8 轮对话</button>
+    </div>
+  </div>
+
+  <div class="two-col" style="grid-template-columns:1fr 340px;">
+    <!-- 对话窗口 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-comments"></i>对话窗口 <span class="card-subtitle">Session: <span class="mono" id="chat-session">SES-20260429-A1F3</span></span></div>
+        <span class="pill pill-info" id="chat-turn-count">第 0 轮</span>
+      </div>
+      <div class="chat-window">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg bot">
+            <div class="chat-avatar"><i class="fas fa-robot"></i></div>
+            <div class="chat-bubble">
+              您好，我是信贷合规助手 <strong>CreditCopilot</strong>。我已加载 10 份规则文档（业务规则 / 内部政策 / 监管文件 / 法律法规），可以连续追问。<br>
+              <span class="text-muted fs-11">提示：试试"小微企业最高能贷多少？" → "如果给 800 万呢？" → "那利率怎么算？"</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" placeholder="输入问题，按 Enter 发送 ..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-filled" onclick="sendChat()"><i class="fas fa-paper-plane"></i> 发送</button>
+        </div>
+      </div>
+      <div class="suggestion-chips mt-12">
+        <span class="suggestion-chip" onclick="useSuggestion(this)">小微企业最高能贷多少？</span>
+        <span class="suggestion-chip" onclick="useSuggestion(this)">如果给 800 万呢？</span>
+        <span class="suggestion-chip" onclick="useSuggestion(this)">那利率怎么算？</span>
+        <span class="suggestion-chip" onclick="useSuggestion(this)">担保方式有什么要求？</span>
+        <span class="suggestion-chip" onclick="useSuggestion(this)">能否汇总一下整个方案？</span>
+      </div>
+    </div>
+
+    <!-- 记忆面板 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="fas fa-brain"></i>记忆机制实时状态</div>
+      </div>
+      <div class="card-body" style="padding:14px;">
+        <div class="memory-panel">
+          <div class="memory-section">
+            <div class="ms-title"><i class="fas fa-stopwatch"></i>① 短期窗口 <span class="text-muted">window=10</span></div>
+            <div class="ms-content" id="mem-window"><span class="ms-empty">空</span></div>
+          </div>
+          <div class="memory-section">
+            <div class="ms-title"><i class="fas fa-compress-alt"></i>② 长期摘要 <span class="text-muted">≥20 轮触发</span></div>
+            <div class="ms-content" id="mem-summary"><span class="ms-empty">未触发（&lt; 20 轮）</span></div>
+          </div>
+          <div class="memory-section">
+            <div class="ms-title"><i class="fas fa-user-tag"></i>③ 实体追踪</div>
+            <div class="ms-content" id="mem-entities"><span class="ms-empty">未识别</span></div>
+          </div>
+          <div class="memory-section">
+            <div class="ms-title"><i class="fas fa-bookmark"></i>④ 引用记忆</div>
+            <div class="ms-content" id="mem-cited"><span class="ms-empty">未引用</span></div>
+          </div>
+          <div class="memory-section">
+            <div class="ms-title"><i class="fas fa-cog"></i>⑤ 偏好记忆</div>
+            <div class="ms-content" id="mem-pref"><span class="ms-empty">默认（合规官身份 · 详细引用）</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 查询改写演示 -->
+  <div class="card mt-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-magic"></i>查询改写过程透视 <span class="card-subtitle">展示用户口语化问题如何变成精确检索查询</span></div>
+    </div>
+    <div class="card-body">
+      <div class="retrieval-panel" id="chat-rewrite-panel" style="min-height:90px;max-height:200px;">
+        <div class="r-line"><span class="r-tag">$</span><span class="r-content">发送一条消息后，这里会显示查询改写过程...</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE 4: 产品方案比对                                          -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-compare">
+  <div class="page-header">
+    <div class="page-title">产品方案智能比对 <span class="title-sub">场景 3 · 凸显精准检索 + 跨产品关联 + 差异分析</span></div>
+    <div class="page-actions">
+      <button class="btn btn-filled" onclick="loadCompareCase('应收账款')"><i class="fas fa-flask"></i> 案例：1000万应收账款融资</button>
+      <button class="btn btn-filled" onclick="loadCompareCase('采购付款')"><i class="fas fa-flask"></i> 案例：上游采购付款</button>
+      <button class="btn btn-filled" onclick="loadCompareCase('短期周转')"><i class="fas fa-flask"></i> 案例：短期资金周转</button>
+    </div>
+  </div>
+
+  <div class="card mb-16">
+    <div class="card-header"><div class="card-title"><i class="fas fa-bullseye"></i>业务诉求录入</div></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>企业类型</label>
+          <select id="cp-type"><option>中型制造业</option><option>小微贸易</option><option>核心企业上游供应商</option></select>
+        </div>
+        <div class="form-group">
+          <label>融资金额(万)</label>
+          <input type="number" id="cp-amount" value="1000">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>融资场景描述</label>
+          <textarea id="cp-need" rows="2">企业有 1000 万应收账款（核心企业开具，账期 90 天），希望提前回笼资金，融资期限 6 个月以内</textarea>
+        </div>
+      </div>
+      <button class="btn btn-filled" style="width:100%;justify-content:center;padding:11px;" onclick="runCompare()">
+        <i class="fas fa-search-plus"></i> 跨产品并行检索 + 智能比对
+      </button>
+    </div>
+  </div>
+
+  <!-- 检索过程 -->
+  <div class="card mb-16" id="cp-process-card" style="display:none;">
+    <div class="card-header"><div class="card-title"><i class="fas fa-network-wired"></i>跨产品并行检索过程</div></div>
+    <div class="card-body">
+      <div class="retrieval-panel" id="cp-retrieval"></div>
+    </div>
+  </div>
+
+  <!-- 比对矩阵 -->
+  <div class="card mb-16" id="cp-table-card" style="display:none;">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-table"></i>4 产品方案横向对比矩阵</div>
+      <span class="pill pill-success"><i class="fas fa-check"></i> 含最优值高亮</span>
+    </div>
+    <div class="card-body" style="padding:8px;">
+      <table class="compare-table" id="cp-table"></table>
+    </div>
+  </div>
+
+  <!-- 最终建议 -->
+  <div class="card" id="cp-recommend-card" style="display:none;">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-trophy"></i>RAG 综合推荐</div>
+    </div>
+    <div class="card-body">
+      <div class="report-block" id="cp-recommend"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE 5: 知识库总览                                            -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-knowledge">
+  <div class="page-header">
+    <div class="page-title">知识库总览 <span class="title-sub">10 份规则文档 · 4 大类目 · 386 向量片段</span></div>
+    <div class="page-actions">
+      <button class="btn"><i class="fas fa-upload"></i> 上传新文档</button>
+      <button class="btn btn-filled"><i class="fas fa-sync"></i> 重新摄入</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-file-alt"></i> 文档总数</div>
+      <div class="stat-value">10 <span class="stat-unit">份</span></div>
+      <div class="stat-trend text-success"><i class="fas fa-arrow-up"></i> 较上月 +2 份</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-layer-group"></i> 文本片段</div>
+      <div class="stat-value">386 <span class="stat-unit">块</span></div>
+      <div class="stat-trend">平均 480 字/块</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-vector-square"></i> 向量索引</div>
+      <div class="stat-value">386 <span class="stat-unit">× 384</span></div>
+      <div class="stat-trend">ChromaDB · cosine</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-database"></i> 索引大小</div>
+      <div class="stat-value">28.4 <span class="stat-unit">MB</span></div>
+      <div class="stat-trend text-muted">向量 18MB + 元数据 10MB</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-folder-tree"></i>文档清单（按类目）</div></div>
+    <div class="card-body">
+      <div class="doc-tree">
+        <div class="doc-cat">
+          <div class="doc-cat-head"><i class="fas fa-briefcase"></i>业务规则 <span class="text-muted fs-11">— 6 份</span></div>
+          <div class="doc-list">
+            <div class="doc-item"><div class="d-icon"><i class="fas fa-file-alt"></i></div><div class="d-info"><div class="d-name">公司信贷业务准入标准.md</div><div class="d-meta">42 块 · 6 章节 · 准入/财务/担保/定价</div></div></div>
+            <div class="doc-item"><div class="d-icon"><i class="fas fa-file-alt"></i></div><div class="d-info"><div class="d-name">对公信贷产品完整手册.md</div><div class="d-meta">68 块 · 5 类产品 · 流贷/固贷/并购/银团</div></div></div>
+            <div class="doc-item"><div class="d-icon"><i class="fas fa-file-alt"></i></div><div class="d-info"><div class="d-name">票据业务操作规范.md</div><div class="d-meta">38 块 · BAB/CAB/票据池</div></div></div>
+            <div class="doc-item"><div class="d-icon"><i class="fas fa-file-alt"></i></div><div class="d-info"><div class="d-name">ABS资产证券化操作手册.md</div><div class="d-meta">52 块 · CLO/RMBS/NPL-ABS</div></div></div>
+            <div class="doc-item"><div class="d-icon"><i class="fas fa-file-alt"></i></div><div class="d-info"><div class="d-name">供应链金融产品体系.md</div><div class="d-meta">44 块 · e点/e销/保理/订单融资</div></div></div>
+            <div class="doc-item"><div class="d-icon"><i class="fas fa-file-alt"></i></div><div class="d-info"><div class="d-name">贸易融资产品手册.md</div><div class="d-meta">40 块 · LC/押汇/保函/福费廷</div></div></div>
+          </div>
+        </div>
+        <div class="doc-cat">
+          <div class="doc-cat-head"><i class="fas fa-shield-alt"></i>内部政策 <span class="text-muted fs-11">— 2 份</span></div>
+          <div class="doc-list">
+            <div class="doc-item"><div class="d-icon" style="background:var(--purple-bg);color:var(--purple);"><i class="fas fa-file-shield"></i></div><div class="d-info"><div class="d-name">信贷审批权限与定价管理.md</div><div class="d-meta">36 块 · 4 级权限 · FTP 曲线</div></div></div>
+            <div class="doc-item"><div class="d-icon" style="background:var(--purple-bg);color:var(--purple);"><i class="fas fa-file-shield"></i></div><div class="d-info"><div class="d-name">风险分类管理办法.md</div><div class="d-meta">22 块 · 五级分类 · 拨备比例</div></div></div>
+          </div>
+        </div>
+        <div class="doc-cat">
+          <div class="doc-cat-head"><i class="fas fa-gavel"></i>监管文件 <span class="text-muted fs-11">— 1 份</span></div>
+          <div class="doc-list">
+            <div class="doc-item"><div class="d-icon" style="background:var(--warning-bg);color:var(--warning);"><i class="fas fa-balance-scale"></i></div><div class="d-info"><div class="d-name">银保监会关于加强小微企业信贷的指导意见.md</div><div class="d-meta">26 块 · 两增两控 · 普惠定义</div></div></div>
+          </div>
+        </div>
+        <div class="doc-cat">
+          <div class="doc-cat-head"><i class="fas fa-landmark"></i>法律法规 <span class="text-muted fs-11">— 1 份</span></div>
+          <div class="doc-list">
+            <div class="doc-item"><div class="d-icon" style="background:var(--danger-bg);color:var(--danger);"><i class="fas fa-book"></i></div><div class="d-info"><div class="d-name">贷款通则关键条款摘录.md</div><div class="d-meta">18 块 · 期限/用途/担保/罚则</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE: RAG 知识库日志                                           -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-kblog">
+  <div class="page-header">
+    <div class="page-title">RAG 知识库日志 <span class="title-sub">入库 / 审核 / 有效期 / 废止 · 全生命周期可追溯</span></div>
+    <div class="page-actions">
+      <button class="btn"><i class="fas fa-filter"></i> 筛选</button>
+      <button class="btn"><i class="fas fa-file-export"></i> 导出审计</button>
+      <button class="btn btn-filled"><i class="fas fa-plus"></i> 新增入库</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-check-circle text-success"></i> 生效中</div>
+      <div class="stat-value">9 <span class="stat-unit">份</span></div>
+      <div class="stat-trend text-muted">含 1 份临时文件</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-pause-circle text-warning"></i> 暂停中</div>
+      <div class="stat-value">1 <span class="stat-unit">份</span></div>
+      <div class="stat-trend text-warning">被临时文件覆盖</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-times-circle text-danger"></i> 已废止</div>
+      <div class="stat-value">2 <span class="stat-unit">份</span></div>
+      <div class="stat-trend text-muted">已剔除检索范围</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="fas fa-bolt"></i> 临时文件</div>
+      <div class="stat-value">1 <span class="stat-unit">份</span></div>
+      <div class="stat-trend text-warning"><i class="fas fa-clock"></i> 距到期 47 天</div>
+    </div>
+  </div>
+
+  <!-- 临时文件区（最显眼、置顶） -->
+  <div class="card mb-16" style="border:2px solid var(--warning);box-shadow:0 0 0 4px rgba(217,119,6,0.08);">
+    <div class="card-header" style="background:linear-gradient(135deg,#FFFBEB 0%,#FEF6E0 100%);border-bottom:1px solid #FDE68A;">
+      <div class="card-title">
+        <i class="fas fa-bolt" style="color:var(--warning);"></i>
+        <span style="color:var(--warning);">临时性时效文件 · 优先适用</span>
+        <span class="card-subtitle">在有效期内，临时文件 <strong>覆盖</strong>对应常规文件，到期后自动恢复原文件效力</span>
+      </div>
+      <span class="pill pill-warning"><i class="fas fa-clock"></i> 1 份生效中</span>
+    </div>
+    <div class="card-body" style="padding:0 8px 8px;">
+      <table class="src-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>临时文件名</th>
+            <th style="width:88px;">类型</th>
+            <th style="width:130px;">入库时间</th>
+            <th style="width:110px;">发布者</th>
+            <th style="width:110px;">审核</th>
+            <th style="width:160px;">有效期 / 倒计时</th>
+            <th>覆盖原文件</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#FFFBEB;">
+            <td class="text-muted fw-700">T1</td>
+            <td>
+              <div class="file-name"><i class="fas fa-bolt text-warning"></i> 关于阶段性提高小微企业流贷单户限额的临时通知（2026年第3号）.md</div>
+              <div class="text-muted fs-11 mt-12" style="margin-top:4px;">把"小微流贷单户上限 500万"<strong>临时上调至 1000万</strong>，配合一季度稳增长政策</div>
+            </td>
+            <td><span class="pill pill-warning">临时</span></td>
+            <td class="mono fs-11">2026-04-01<br><span class="text-muted">10:23:08</span></td>
+            <td>
+              <div class="fs-12 fw-700">普惠金融部</div>
+              <div class="text-muted fs-11">王立明 · 部门负责人</div>
+            </td>
+            <td>
+              <div class="fs-12"><span class="pill pill-success"><i class="fas fa-check"></i> 已审核</span></div>
+              <div class="text-muted fs-11" style="margin-top:3px;">合规官陈yy<br><span class="mono">2026-04-01 14:50</span></div>
+            </td>
+            <td>
+              <div class="fs-12 fw-700">2026-04-01 ~ <span class="text-warning">2026-06-30</span></div>
+              <div style="height:6px;background:var(--border-light);border-radius:3px;overflow:hidden;margin-top:5px;position:relative;">
+                <div style="position:absolute;left:0;top:0;bottom:0;width:32%;background:linear-gradient(90deg,var(--success),var(--warning));"></div>
+              </div>
+              <div class="text-warning fs-11 mt-12" style="margin-top:3px;"><i class="fas fa-clock"></i> 距到期 <strong>47 天</strong></div>
+            </td>
+            <td>
+              <div class="fs-12">→ 暂停 1 份常规文件</div>
+              <div class="text-muted fs-11 mt-12" style="margin-top:3px;">
+                <i class="fas fa-link"></i> 对公信贷产品完整手册.md <br>
+                <span class="pill pill-gray" style="margin-top:2px;">§1.4 小微限额条款</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin:10px 12px;padding:10px 12px;background:var(--info-bg);border-left:3px solid var(--info);border-radius:6px;font-size:11.5px;color:var(--text-secondary);line-height:1.6;">
+        <i class="fas fa-info-circle text-primary-c"></i> <strong>覆盖规则：</strong>检索时 RAG 优先返回临时文件片段；当临时文件到期（2026-06-30 23:59），系统自动将其状态切换为"已废止"，被覆盖的原文件自动恢复"生效中"，无需人工干预。
+      </div>
+    </div>
+  </div>
+
+  <!-- 常规文件清单 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-book-open"></i>常规知识库文件清单 <span class="card-subtitle">入库时间 · 发布者 · 内容审核 · 有效期 · 废止日期</span></div>
+      <div style="display:flex;gap:6px;">
+        <span class="pill pill-success">生效 8</span>
+        <span class="pill pill-warning">暂停 1</span>
+        <span class="pill pill-danger">废止 2</span>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0 8px 8px;">
+      <table class="src-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>文件名</th>
+            <th style="width:90px;">分类</th>
+            <th style="width:90px;">状态</th>
+            <th style="width:115px;">入库时间</th>
+            <th style="width:130px;">发布者</th>
+            <th style="width:130px;">内容审核</th>
+            <th style="width:170px;">有效期</th>
+            <th style="width:115px;">废止日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 生效中 -->
+          <tr>
+            <td class="text-muted">1</td>
+            <td class="file-name"><i class="fas fa-file-alt"></i> 公司信贷业务准入标准.md</td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-08-15</td>
+            <td class="fs-11">公司业务部<br><span class="text-muted">李建国</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 08-16</span></td>
+            <td class="fs-11">2025-09-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <!-- 被临时文件覆盖：暂停中（红线划掉 + 暂停标记）-->
+          <tr style="background:#FEF2F2;">
+            <td class="text-muted fw-700" style="color:var(--warning);">2</td>
+            <td>
+              <div class="file-name" style="text-decoration:line-through;text-decoration-color:var(--danger);text-decoration-thickness:2px;color:var(--text-muted);">
+                <i class="fas fa-file-alt"></i> 对公信贷产品完整手册.md
+              </div>
+              <div class="text-warning fs-11 mt-12" style="margin-top:4px;">
+                <i class="fas fa-pause-circle"></i> §1.4 小微限额条款被临时文件 T1 覆盖，待 2026-06-30 后恢复
+              </div>
+            </td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-warning"><i class="fas fa-pause"></i> 暂停使用</span></td>
+            <td class="mono fs-11 text-muted">2025-09-02</td>
+            <td class="fs-11 text-muted">公司业务部<br><span class="text-muted">张文博</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 09-03</span></td>
+            <td class="fs-11 text-muted">2025-09-15<br>~ 长期有效<br><span class="pill pill-warning" style="margin-top:3px;">部分条款暂停</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">3</td>
+            <td class="file-name"><i class="fas fa-file-alt"></i> 票据业务操作规范.md</td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-10-08</td>
+            <td class="fs-11">票据中心<br><span class="text-muted">赵慧敏</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 10-09</span></td>
+            <td class="fs-11">2025-11-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">4</td>
+            <td class="file-name"><i class="fas fa-file-alt"></i> ABS资产证券化操作手册.md</td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-11-12</td>
+            <td class="fs-11">投行部<br><span class="text-muted">周智远</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 11-15</span></td>
+            <td class="fs-11">2025-12-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">5</td>
+            <td class="file-name"><i class="fas fa-file-alt"></i> 供应链金融产品体系.md</td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2026-01-05</td>
+            <td class="fs-11">供应链金融部<br><span class="text-muted">孙立伟</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 01-08</span></td>
+            <td class="fs-11">2026-02-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">6</td>
+            <td class="file-name"><i class="fas fa-file-alt"></i> 贸易融资产品手册.md</td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2026-02-18</td>
+            <td class="fs-11">国际业务部<br><span class="text-muted">钱思琪</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 02-20</span></td>
+            <td class="fs-11">2026-03-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">7</td>
+            <td class="file-name"><i class="fas fa-file-shield text-purple-c" style="color:var(--purple);"></i> 信贷审批权限与定价管理.md</td>
+            <td><span class="pill pill-purple">内部政策</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-09-20</td>
+            <td class="fs-11">风险管理部<br><span class="text-muted">吴俊辉</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 09-22</span></td>
+            <td class="fs-11">2025-10-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">8</td>
+            <td class="file-name"><i class="fas fa-file-shield" style="color:var(--purple);"></i> 风险分类管理办法.md</td>
+            <td><span class="pill pill-purple">内部政策</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-12-10</td>
+            <td class="fs-11">资产管理部<br><span class="text-muted">郑文清</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">陈yy · 12-11</span></td>
+            <td class="fs-11">2026-01-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">9</td>
+            <td class="file-name"><i class="fas fa-balance-scale" style="color:var(--warning);"></i> 银保监会关于加强小微企业信贷的指导意见.md</td>
+            <td><span class="pill pill-warning">监管文件</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-07-22</td>
+            <td class="fs-11">合规部<br><span class="text-muted">陈yy（外采）</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">合规委 · 07-25</span></td>
+            <td class="fs-11">2025-08-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <tr>
+            <td class="text-muted">10</td>
+            <td class="file-name"><i class="fas fa-book" style="color:var(--danger);"></i> 贷款通则关键条款摘录.md</td>
+            <td><span class="pill pill-danger">法律法规</span></td>
+            <td><span class="pill pill-success"><i class="fas fa-check"></i> 生效</span></td>
+            <td class="mono fs-11">2025-06-10</td>
+            <td class="fs-11">法律事务部<br><span class="text-muted">林书豪</span></td>
+            <td class="fs-11"><span class="pill pill-success">通过</span><br><span class="text-muted">合规委 · 06-12</span></td>
+            <td class="fs-11">2025-07-01<br>~ <span class="text-success">长期有效</span></td>
+            <td class="text-muted fs-11">—</td>
+          </tr>
+          <!-- 已废止：红线划掉 -->
+          <tr style="background:#FEF2F2;opacity:0.78;">
+            <td class="text-muted fw-700" style="color:var(--danger);">×</td>
+            <td>
+              <div class="file-name" style="text-decoration:line-through;text-decoration-color:var(--danger);text-decoration-thickness:2px;color:var(--text-muted);">
+                <i class="fas fa-file-alt"></i> 公司信贷业务准入标准（2024版）.md
+              </div>
+              <div class="text-danger fs-11 mt-12" style="margin-top:4px;"><i class="fas fa-times-circle"></i> 已被 2025 版替代，不再参与检索</div>
+            </td>
+            <td><span class="pill pill-gray">业务规则</span></td>
+            <td><span class="pill pill-danger"><i class="fas fa-times"></i> 已废止</span></td>
+            <td class="mono fs-11 text-muted">2024-03-10</td>
+            <td class="fs-11 text-muted">公司业务部<br><span class="text-muted">李建国</span></td>
+            <td class="fs-11 text-muted"><span class="pill pill-gray">通过</span><br><span class="text-muted">前合规官 · 03-12</span></td>
+            <td class="fs-11 text-muted" style="text-decoration:line-through;">2024-04-01<br>~ 2025-09-01</td>
+            <td class="fs-11 text-danger fw-700">2025-09-01</td>
+          </tr>
+          <tr style="background:#FEF2F2;opacity:0.78;">
+            <td class="text-muted fw-700" style="color:var(--danger);">×</td>
+            <td>
+              <div class="file-name" style="text-decoration:line-through;text-decoration-color:var(--danger);text-decoration-thickness:2px;color:var(--text-muted);">
+                <i class="fas fa-file-shield"></i> 信贷审批权限与定价管理（2023版）.md
+              </div>
+              <div class="text-danger fs-11 mt-12" style="margin-top:4px;"><i class="fas fa-times-circle"></i> FTP 曲线及加点区间已变更，2025 版生效后废止</div>
+            </td>
+            <td><span class="pill pill-purple">内部政策</span></td>
+            <td><span class="pill pill-danger"><i class="fas fa-times"></i> 已废止</span></td>
+            <td class="mono fs-11 text-muted">2023-08-22</td>
+            <td class="fs-11 text-muted">风险管理部<br><span class="text-muted">吴俊辉</span></td>
+            <td class="fs-11 text-muted"><span class="pill pill-gray">通过</span><br><span class="text-muted">前合规官 · 08-24</span></td>
+            <td class="fs-11 text-muted" style="text-decoration:line-through;">2023-09-01<br>~ 2025-10-01</td>
+            <td class="fs-11 text-danger fw-700">2025-10-01</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 操作日志 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-history"></i>近期变更日志</div>
+      <span class="card-subtitle">所有入库 / 替换 / 废止 / 暂停 操作均留痕</span>
+    </div>
+    <div class="card-body">
+      <div style="font-size:12.5px;line-height:1.9;">
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <span class="pill pill-warning" style="flex-shrink:0;"><i class="fas fa-bolt"></i> 临时入库</span>
+          <span class="mono text-muted fs-11" style="flex-shrink:0;">2026-04-01 14:50</span>
+          <span>临时文件《阶段性提高小微企业流贷单户限额的临时通知》入库 → 同步将《对公信贷产品完整手册》§1.4 标记为<strong class="text-warning">"暂停使用"</strong> · 操作人：陈yy</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <span class="pill pill-success" style="flex-shrink:0;"><i class="fas fa-plus"></i> 新增</span>
+          <span class="mono text-muted fs-11" style="flex-shrink:0;">2026-02-20 09:33</span>
+          <span>《贸易融资产品手册》通过审核入库（40 chunks）· 发布者：钱思琪 · 审核：陈yy</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <span class="pill pill-success" style="flex-shrink:0;"><i class="fas fa-plus"></i> 新增</span>
+          <span class="mono text-muted fs-11" style="flex-shrink:0;">2026-01-08 16:12</span>
+          <span>《供应链金融产品体系》通过审核入库（44 chunks）· 发布者：孙立伟 · 审核：陈yy</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <span class="pill pill-danger" style="flex-shrink:0;"><i class="fas fa-times"></i> 废止</span>
+          <span class="mono text-muted fs-11" style="flex-shrink:0;">2025-10-01 00:00</span>
+          <span><span style="text-decoration:line-through;color:var(--text-muted);">《信贷审批权限与定价管理（2023版）》</span> 自动废止 → 由 2025 版替代 · 触发方式：定时任务</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;">
+          <span class="pill pill-danger" style="flex-shrink:0;"><i class="fas fa-times"></i> 废止</span>
+          <span class="mono text-muted fs-11" style="flex-shrink:0;">2025-09-01 00:00</span>
+          <span><span style="text-decoration:line-through;color:var(--text-muted);">《公司信贷业务准入标准（2024版）》</span> 自动废止 → 由 2025 版替代 · 触发方式：定时任务</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <span class="pill pill-info" style="flex-shrink:0;"><i class="fas fa-cog"></i> 系统</span>
+          <span class="mono text-muted fs-11" style="flex-shrink:0;">2026-06-30 23:59</span>
+          <span class="text-muted">[预定] 临时文件《阶段性提高小微企业流贷单户限额》到期自动废止 → 同步恢复《对公信贷产品完整手册》§1.4 效力</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE 6: 摄入流水线                                            -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-ingest">
+  <div class="page-header">
+    <div class="page-title">摄入流水线 <span class="title-sub">把规则文档变成可检索向量的 6 步工序</span></div>
+    <div class="page-actions"><button class="btn btn-filled"><i class="fas fa-play"></i> 模拟摄入</button></div>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <div style="text-align:center;color:var(--text-muted);padding:40px;">
+        <i class="fas fa-tools" style="font-size:42px;color:var(--accent-gold);"></i>
+        <div class="mt-12 fs-12">摄入流水线可视化 · 配合后端 <code class="mono">pipeline.ingest_directory()</code> 实时演示</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ============================================================
+// 页面切换
+// ============================================================
+function showPage(pageId){
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('page-'+pageId).classList.add('active');
+  document.querySelectorAll('.sidebar-menu a').forEach(a=>a.classList.remove('active'));
+  document.querySelector(`.sidebar-menu a[data-page="${pageId}"]`)?.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.sidebar-menu a[data-page]').forEach(a=>{
+  a.addEventListener('click',e=>{e.preventDefault();showPage(a.dataset.page);});
+});
+
+// ============================================================
+// 工具函数
+// ============================================================
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function logRetrieval(panel,tag,content,cls=''){
+  const div=document.createElement('div');
+  div.className='r-line';
+  div.innerHTML=`<span class="r-tag ${cls}">${tag}</span><span class="r-content">${content}</span>`;
+  panel.appendChild(div);
+  panel.scrollTop=panel.scrollHeight;
+}
+
+// ============================================================
+// 场景 1：信贷预审
+// ============================================================
+const PRE_CASES={
+  1:{company:'某科技制造有限公司',industry:'制造业（新能源）',type:'中型企业',rating:'AA',revenue:8000,ratio:62,product:'流动资金贷款',amount:1500,term:12,guarantee:'房产抵押',purpose:'采购原材料及支付供应商货款'},
+  2:{company:'某商贸发展有限公司',industry:'大宗商品贸易',type:'小微企业',rating:'A',revenue:600,ratio:74,product:'流动资金贷款',amount:800,term:36,guarantee:'应收账款质押',purpose:'购买存货及补充流动资金'},
+  3:{company:'某房地产开发有限公司',industry:'房地产开发',type:'中型企业',rating:'BBB',revenue:12000,ratio:85,product:'流动资金贷款',amount:6000,term:36,guarantee:'土地使用权抵押',purpose:'用于房地产项目建设'},
+};
+function loadPrereviewCase(n){
+  const c=PRE_CASES[n];
+  document.getElementById('pp-company').value=c.company;
+  document.getElementById('pp-industry').value=c.industry;
+  document.getElementById('pp-type').value=c.type;
+  document.getElementById('pp-rating').value=c.rating;
+  document.getElementById('pp-revenue').value=c.revenue;
+  document.getElementById('pp-ratio').value=c.ratio;
+  document.getElementById('pp-product').value=c.product;
+  document.getElementById('pp-amount').value=c.amount;
+  document.getElementById('pp-term').value=c.term;
+  document.getElementById('pp-guarantee').value=c.guarantee;
+  document.getElementById('pp-purpose').value=c.purpose;
+  resetPrereview();
+  setTimeout(()=>runPrereview(n),200);
+}
+function resetPrereview(){
+  document.getElementById('pp-retrieval').innerHTML='<div class="r-line"><span class="r-tag">$</span><span class="r-content">点击左侧"启动 RAG 预审"开始演示...</span></div>';
+  document.getElementById('pp-status').className='pill pill-gray';
+  document.getElementById('pp-status').innerHTML='<i class="fas fa-circle" style="font-size:6px;"></i> 待启动';
+  ['pp-sources-card','pp-verdict-block','pp-report-card'].forEach(id=>document.getElementById(id).style.display='none');
+}
+const PRE_QUERIES=['{product}准入条件','{product}申请材料要求','{amount}万元审批权限','{product}期限规定','{guarantee}担保要求 质押率','{rating}评级 贷款利率 定价','{industry}行业 授信限制','资产负债率{ratio}% 准入'];
+const PRE_HITS_DB={
+  1:[
+    {file:'公司信贷业务准入标准.md',cat:'业务规则',type:'准入',score:0.91,snippet:'借款人资产负债率原则上不超过70%，速动比率不低于0.8...'},
+    {file:'对公信贷产品完整手册.md',cat:'业务规则',type:'产品',score:0.87,snippet:'流动资金贷款额度 = 营运资金缺口 × 90%，单笔期限不超过 12 个月...'},
+    {file:'信贷审批权限与定价管理.md',cat:'内部政策',type:'权限',score:0.84,snippet:'1500万属支行行长审批权限范围（≤2000万），无需上报分行...'},
+    {file:'信贷审批权限与定价管理.md',cat:'内部政策',type:'定价',score:0.79,snippet:'AA级客户加点区间 LPR+0~30BP，本笔综合定价建议 LPR+15BP...'},
+    {file:'公司信贷业务准入标准.md',cat:'业务规则',type:'担保',score:0.76,snippet:'住宅类房产抵押率上限 70%，本笔抵押率 1500/2800=53.6% ✓'},
+    {file:'风险分类管理办法.md',cat:'内部政策',type:'风险',score:0.71,snippet:'AA级 + 抵押充足 + 现金流稳定，初判正常类...'},
+    {file:'贷款通则关键条款摘录.md',cat:'法律法规',type:'用途',score:0.68,snippet:'流动资金贷款用途须真实合规，原材料采购属允许范围...'},
+  ],
+  2:[
+    {file:'银保监会关于加强小微企业信贷的指导意见.md',cat:'监管文件',type:'监管',score:0.93,snippet:'普惠型小微企业贷款单户授信总额 1000万元（含）以下...'},
+    {file:'公司信贷业务准入标准.md',cat:'业务规则',type:'准入',score:0.89,snippet:'⚠️ 资产负债率超过70%警戒线，本笔74%，需董事会决议...'},
+    {file:'对公信贷产品完整手册.md',cat:'业务规则',type:'产品',score:0.85,snippet:'⚠️ 小微企业流贷单户上限500万元，本笔800万超限...'},
+    {file:'信贷审批权限与定价管理.md',cat:'内部政策',type:'权限',score:0.81,snippet:'800万小微贷款须分行二级审批，建议补充核心企业担保...'},
+    {file:'供应链金融产品体系.md',cat:'业务规则',type:'担保',score:0.78,snippet:'应收账款质押率上限 70%，本笔 800/1200=66.7% ✓'},
+    {file:'信贷审批权限与定价管理.md',cat:'内部政策',type:'定价',score:0.74,snippet:'A级客户加点区间 LPR+30~80BP...'},
+    {file:'风险分类管理办法.md',cat:'内部政策',type:'风险',score:0.69,snippet:'成立2年 + 负债超标，建议关注类...'},
+  ],
+  3:[
+    {file:'公司信贷业务准入标准.md',cat:'业务规则',type:'准入',score:0.95,snippet:'❌ 房地产开发企业资产负债率不得超过80%，本笔85%严重超标...'},
+    {file:'贷款通则关键条款摘录.md',cat:'法律法规',type:'用途',score:0.93,snippet:'❌ 流动资金贷款不得用于固定资产投资、股权投资、房地产开发...'},
+    {file:'公司信贷业务准入标准.md',cat:'业务规则',type:'行业',score:0.89,snippet:'❌ 房地产开发行业实行限额管理，新增授信须总行专项审批...'},
+    {file:'信贷审批权限与定价管理.md',cat:'内部政策',type:'权限',score:0.86,snippet:'❌ 房地产行业敞口 + 6000万 → 直接上报总行，不在分行权限内...'},
+    {file:'风险分类管理办法.md',cat:'内部政策',type:'风险',score:0.82,snippet:'❌ BBB评级 + 用途违规 → 关注类下行风险高...'},
+    {file:'银保监会关于加强小微企业信贷的指导意见.md',cat:'监管文件',type:'监管',score:0.74,snippet:'监管要求严控房地产领域过度授信...'},
+  ]
+};
+const PRE_REPORTS={
+  1:{verdict:'pass',sections:[
+    {h:'一、基本准入审查',items:[
+      {k:'ok',t:'企业经营年限符合（2018年成立，已超2年）',c:'公司信贷业务准入标准.md'},
+      {k:'ok',t:'资产负债率 62% ≤ 70% 行内标准线',c:'公司信贷业务准入标准.md - §2.3'},
+      {k:'ok',t:'内部评级 AA，符合优质客户准入',c:'信贷审批权限与定价管理.md'},
+      {k:'ok',t:'制造业属鼓励授信行业',c:'公司信贷业务准入标准.md - §4'},
+    ]},
+    {h:'二、额度与期限合规性',items:[
+      {k:'ok',t:'申请金额 1500万 < 中型企业流贷上限 2亿',c:'对公信贷产品完整手册.md'},
+      {k:'ok',t:'期限 12 个月 ≤ 流贷最长期限 12 个月',c:'对公信贷产品完整手册.md - §1.2'},
+    ]},
+    {h:'三、担保合规性',items:[
+      {k:'ok',t:'住宅房产抵押率 1500/2800 = 53.6% < 70% 上限',c:'公司信贷业务准入标准.md - §5.1'},
+      {k:'ok',t:'抵押物估值充足，覆盖倍数 1.87×',c:'公司信贷业务准入标准.md'},
+    ]},
+    {h:'四、定价建议',items:[
+      {k:'ok',t:'AA级建议加点区间 LPR+0~30BP，本笔推荐 LPR+15BP',c:'信贷审批权限与定价管理.md - §3.2'},
+    ]},
+    {h:'五、审批权限建议',items:[
+      {k:'ok',t:'1500万 ∈ (500万, 2000万]，支行行长审批权限',c:'信贷审批权限与定价管理.md - §1'},
+    ]},
+    {h:'六、风险提示',items:[
+      {k:'warn',t:'新能源设备行业受政策补贴影响较大，建议关注下游订单稳定性',c:'风险分类管理办法.md'},
+    ]},
+    {h:'七、预审结论',items:[
+      {k:'ok',t:'✅ 建议受理（所有条件均满足，可进入正式审批流程）',c:''},
+    ]},
+    {h:'八、所需材料清单',items:[
+      {k:'ok',t:'营业执照 / 公司章程 / 近3年审计报告 / 近6月银行流水 / 房产证及评估报告 / 用途证明文件',c:''},
+    ]},
+  ]},
+  2:{verdict:'cond',sections:[
+    {h:'一、基本准入审查',items:[
+      {k:'warn',t:'企业成立仅2年（2023年），刚满最低年限',c:'公司信贷业务准入标准.md - §1.1'},
+      {k:'bad',t:'❌ 资产负债率 74% 超过 70% 行内标准线',c:'公司信贷业务准入标准.md - §2.3'},
+      {k:'ok',t:'A级评级符合小微准入',c:'信贷审批权限与定价管理.md'},
+    ]},
+    {h:'二、额度与期限合规性',items:[
+      {k:'bad',t:'❌ 申请 800万 超出小微企业流贷单户上限 500万',c:'对公信贷产品完整手册.md - §1.4'},
+      {k:'warn',t:'但 ≤ 普惠小微 1000万 监管口径',c:'银保监会关于加强小微企业信贷的指导意见.md'},
+      {k:'ok',t:'期限 36 个月 ≤ 流贷最长期限',c:'对公信贷产品完整手册.md'},
+    ]},
+    {h:'三、担保合规性',items:[
+      {k:'ok',t:'应收账款质押率 800/1200 = 66.7% < 70% 上限',c:'供应链金融产品体系.md - §3'},
+      {k:'warn',t:'需核实核心企业资信、确认账款真实性',c:'供应链金融产品体系.md'},
+    ]},
+    {h:'四、定价建议',items:[
+      {k:'ok',t:'A级建议加点区间 LPR+30~80BP，本笔推荐 LPR+60BP（含风险溢价）',c:'信贷审批权限与定价管理.md'},
+    ]},
+    {h:'五、审批权限建议',items:[
+      {k:'warn',t:'800万 + 风险点超标，建议提级至分行二级审批',c:'信贷审批权限与定价管理.md - §1'},
+    ]},
+    {h:'六、风险提示',items:[
+      {k:'warn',t:'近半年收入快速增长需核实背景，警惕账款集中度风险',c:'风险分类管理办法.md'},
+    ]},
+    {h:'七、预审结论',items:[
+      {k:'warn',t:'⚠️ 有条件受理（需满足以下条件后受理）',c:''},
+      {k:'warn',t:'  · 限额下调至 500万 或 提供核心企业连带担保',c:''},
+      {k:'warn',t:'  · 补充核心企业贸易合同、账款验真函',c:''},
+      {k:'warn',t:'  · 出具董事会决议同意超线申贷',c:''},
+    ]},
+    {h:'八、所需材料清单',items:[
+      {k:'ok',t:'营业执照 / 章程 / 近2年审计报告 / 近12月流水 / 应收账款明细及合同 / 核心企业出具的付款承诺函 / 董事会决议',c:''},
+    ]},
+  ]},
+  3:{verdict:'reject',sections:[
+    {h:'一、基本准入审查',items:[
+      {k:'bad',t:'❌ 资产负债率 85% 超过房地产行业 80% 红线',c:'公司信贷业务准入标准.md - §4.2'},
+      {k:'bad',t:'❌ BBB评级触及房地产行业最低准入要求',c:'公司信贷业务准入标准.md'},
+    ]},
+    {h:'二、额度与期限合规性',items:[
+      {k:'bad',t:'❌ 6000万超出分行权限（>5000万），须上报总行',c:'信贷审批权限与定价管理.md - §1'},
+    ]},
+    {h:'三、贷款用途合规性（致命）',items:[
+      {k:'bad',t:'❌ 申报为流动资金贷款，但实际用途"用于房地产项目建设"',c:''},
+      {k:'bad',t:'❌ 直接违反《贷款通则》流贷不得用于固定资产投资及房地产开发',c:'贷款通则关键条款摘录.md - §11'},
+    ]},
+    {h:'四、行业准入',items:[
+      {k:'bad',t:'❌ 房地产开发行业实行限额管理，新增授信须总行专项审批',c:'公司信贷业务准入标准.md - §4.1'},
+      {k:'bad',t:'❌ 监管要求严控房地产领域过度授信',c:'银保监会关于加强小微企业信贷的指导意见.md'},
+    ]},
+    {h:'五、风险提示',items:[
+      {k:'bad',t:'❌ 用途违规 + 行业受限 + 财务恶化，下迁次级类风险极高',c:'风险分类管理办法.md - §2.3'},
+    ]},
+    {h:'六、预审结论',items:[
+      {k:'bad',t:'❌ 建议不受理（存在以下硬性障碍）',c:''},
+      {k:'bad',t:'  · 用途违规：流贷不得用于房地产开发（贷款通则）',c:''},
+      {k:'bad',t:'  · 财务超标：负债率超行业红线（85% > 80%）',c:''},
+      {k:'bad',t:'  · 权限超限：金额需总行专项审批',c:''},
+    ]},
+    {h:'七、备选建议',items:[
+      {k:'warn',t:'若客户确有真实房地产开发融资需求，建议改走房地产开发贷专项产品（须项目四证齐全 + 自有资金 ≥30%）',c:'对公信贷产品完整手册.md'},
+    ]},
+  ]},
+};
+async function runPrereview(caseN){
+  // 检测当前是哪个 case
+  const company=document.getElementById('pp-company').value;
+  let cn=caseN;
+  if(!cn){
+    if(company.includes('科技制造'))cn=1;
+    else if(company.includes('商贸'))cn=2;
+    else if(company.includes('房地产'))cn=3;
+    else cn=1;
+  }
+  resetPrereview();
+  const status=document.getElementById('pp-status');
+  status.className='pill pill-warning';
+  status.innerHTML='<span class="loader"></span> 检索中...';
+  const panel=document.getElementById('pp-retrieval');
+  panel.innerHTML='';
+
+  const product=document.getElementById('pp-product').value;
+  const amount=document.getElementById('pp-amount').value;
+  const guar=document.getElementById('pp-guarantee').value;
+  const rating=document.getElementById('pp-rating').value;
+  const industry=document.getElementById('pp-industry').value;
+  const ratio=document.getElementById('pp-ratio').value;
+
+  logRetrieval(panel,'[INIT]',`正在为 <span class="r-file">${company}</span> 启动 RAG 预审流水线`,'q');
+  await sleep(300);
+  logRetrieval(panel,'[STEP 1]','构造多维度检索查询（8 维并行）','q');
+  await sleep(200);
+  PRE_QUERIES.forEach(q=>{
+    const filled=q.replace('{product}',product).replace('{amount}',amount).replace('{guarantee}',guar).replace('{rating}',rating).replace('{industry}',industry).replace('{ratio}',ratio);
+    logRetrieval(panel,'   →',filled);
+  });
+  await sleep(400);
+  logRetrieval(panel,'[STEP 2]','LLM 查询改写（QueryRewriter）→ 每条派生 2 条变体...','q');
+  await sleep(500);
+  logRetrieval(panel,'[STEP 3]','并行执行 24 次混合检索（语义×0.6 + BM25×0.4）','q');
+  await sleep(400);
+  const hits=PRE_HITS_DB[cn];
+  for(const h of hits){
+    logRetrieval(panel,'[HIT]',`<span class="r-score">${h.score.toFixed(3)}</span> 《<span class="r-file">${h.file}</span>》→ ${h.snippet}`,'h');
+    await sleep(180);
+  }
+  await sleep(300);
+  logRetrieval(panel,'[STEP 4]',`合并去重 → 命中 <strong>${hits.length}</strong> 份规则文档 / <strong>${hits.length+5}</strong> 个片段`,'s');
+  await sleep(300);
+  logRetrieval(panel,'[STEP 5]','构造 Prompt 注入 LLM（system 强约束：以检索内容为唯一依据 + 必须括号注明文件名）','q');
+  await sleep(400);
+  logRetrieval(panel,'[LLM]','Claude Sonnet 4.6 流式生成预审报告 <span class="blink"></span>','r');
+  await sleep(900);
+  logRetrieval(panel,'[DONE]','报告生成完毕，已渲染至下方','s');
+
+  // 渲染来源
+  document.getElementById('pp-sources-card').style.display='';
+  document.getElementById('pp-sources-count').innerHTML=hits.length+' 份';
+  const srcBody=document.getElementById('pp-sources-body');
+  srcBody.innerHTML=hits.map((h,i)=>{
+    const cls=h.score>0.85?'pill-success':h.score>0.70?'pill-info':'pill-gray';
+    return `<tr><td class="text-muted">${i+1}</td>
+      <td class="file-name"><i class="fas fa-file-alt"></i> ${h.file}</td>
+      <td><span class="pill pill-gray">${h.cat}</span></td>
+      <td><span class="pill ${cls}">${h.type}</span></td>
+      <td><span class="score-bar" style="--w:${(h.score*100).toFixed(0)}%"></span><span class="mono fs-11 fw-700">${h.score.toFixed(3)}</span></td>
+      <td class="text-muted fs-11">${h.snippet.slice(0,50)}...</td></tr>`;
+  }).join('');
+
+  // 渲染 verdict
+  const rep=PRE_REPORTS[cn];
+  const verdictBlock=document.getElementById('pp-verdict-block');
+  verdictBlock.style.display='';
+  const vMap={pass:{cls:'pass',ico:'check',title:'✅ 建议受理',sub:'所有合规条件均满足，可进入正式审批流程'},
+              cond:{cls:'cond',ico:'exclamation',title:'⚠️ 有条件受理',sub:'存在合规疑点，需补充材料或满足条件后受理'},
+              reject:{cls:'reject',ico:'times',title:'❌ 建议不受理',sub:'触碰硬性红线条款，无法进入审批流程'}};
+  const v=vMap[rep.verdict];
+  verdictBlock.innerHTML=`<div class="verdict ${v.cls}"><div class="v-icon"><i class="fas fa-${v.ico}"></i></div><div><div class="v-title">${v.title}</div><div class="v-sub">${v.sub}</div></div></div>`;
+
+  // 流式渲染报告
+  document.getElementById('pp-report-card').style.display='';
+  const reportEl=document.getElementById('pp-report');
+  reportEl.innerHTML='';
+  document.getElementById('pp-elapsed').textContent=(2.0+Math.random()*0.8).toFixed(1);
+  for(const sec of rep.sections){
+    const h=document.createElement('h3');h.textContent=sec.h;reportEl.appendChild(h);
+    for(const it of sec.items){
+      const div=document.createElement('div');
+      div.className=`check ${it.k}`;
+      const icon=it.k==='ok'?'check-circle':it.k==='warn'?'exclamation-triangle':'times-circle';
+      div.innerHTML=`<i class="fas fa-${icon}"></i><span>${it.t}${it.c?`<span class="cite">（依据：${it.c}）</span>`:''}</span>`;
+      reportEl.appendChild(div);
+      await sleep(60);
+    }
+  }
+  status.className='pill pill-success';
+  status.innerHTML='<i class="fas fa-check"></i> 完成';
+}
+
+// ============================================================
+// 场景 2：智能咨询多轮
+// ============================================================
+let chatTurn=0;
+let chatMemory={window:[],summary:'',entities:{},cited:new Set(),pref:'默认（合规官身份 · 详细引用）'};
+
+const CHAT_SCRIPT=[
+  {q:'小微企业最高能贷多少？',
+   rewrite:['小微企业最高能贷多少？','普惠型小微企业贷款单户授信额度上限','行内对小微企业流贷限额规定'],
+   entities:{企业类型:'小微企业'},
+   cited:['银保监会关于加强小微企业信贷的指导意见.md','对公信贷产品完整手册.md'],
+   a:'根据 <span class="cite-ref">银保监会指导意见</span>，普惠型小微企业贷款单户授信总额上限为 <strong>1000万元</strong>。结合 <span class="cite-ref">对公信贷产品完整手册</span>，行内对小微企业流动资金贷款单户上限为 <strong>500万元</strong>，超过 500万 但不超过 1000万的可走"普惠通道"，但需提级到分行二级审批。'},
+  {q:'如果给 800 万呢？',
+   rewrite:['800万小微贷款合规性','小微企业 800万 是否超限','普惠通道 800万 审批要求'],
+   entities:{企业类型:'小微企业',申请金额:'800万元'},
+   cited:['对公信贷产品完整手册.md','信贷审批权限与定价管理.md','银保监会关于加强小微企业信贷的指导意见.md'],
+   a:'对您之前提到的 <strong>小微企业</strong>申请 <strong>800万</strong>：<br>• 已超出行内标准限额 500万 <span class="cite-ref">手册§1.4</span><br>• 但仍在普惠监管口径 1000万以内 <span class="cite-ref">银保监会</span><br>• 处理建议：走普惠通道，由<strong>分行二级审批</strong>，需提供核心企业担保或交易背景证明 <span class="cite-ref">权限管理§1</span>'},
+  {q:'那利率怎么算？',
+   rewrite:['800万小微企业贷款利率定价','普惠小微 利率加点区间','小微 流贷 综合定价公式'],
+   entities:{企业类型:'小微企业',申请金额:'800万元'},
+   cited:['信贷审批权限与定价管理.md'],
+   a:'承接上文 <strong>800万小微流贷</strong>，定价拆解：<br>① <strong>基准</strong>：1Y LPR（当前 3.45%）<br>② <strong>风险加点</strong>：A级客户 LPR+30~80BP <span class="cite-ref">权限管理§3</span><br>③ <strong>普惠减点</strong>：监管要求普惠小微利率不高于行内同类 90% <span class="cite-ref">权限管理§3.4</span><br>④ <strong>综合区间</strong>：约 LPR+15~50BP（即 3.60% ~ 3.95%）'},
+  {q:'担保方式有什么要求？',
+   rewrite:['小微企业 800万贷款 担保方式 要求','应收账款质押率 上限','核心企业担保 准入'],
+   entities:{企业类型:'小微企业',申请金额:'800万元'},
+   cited:['公司信贷业务准入标准.md','供应链金融产品体系.md'],
+   a:'对 <strong>800万小微流贷</strong>，可选担保方式（按行内偏好排序）：<br>① 房产抵押：抵押率 ≤70%（住宅）/60%（商业）<span class="cite-ref">准入§5.1</span><br>② 应收账款质押：上限 70%，需核心企业开具付款确认 <span class="cite-ref">供应链§3</span><br>③ 核心企业连带担保：可豁免限额超线，但需核心企业是 AA+ 以上白名单 <span class="cite-ref">供应链§4</span><br>④ 信用贷：仅对 AAA / AA 客户开放，本笔 A级 不适用'},
+  {q:'能否汇总一下整个方案？',
+   rewrite:['小微企业 800万 流贷 完整审批方案','小微 流贷 审批清单 利率 担保 综合','RAG 综合预审 总结'],
+   entities:{企业类型:'小微企业',申请金额:'800万元'},
+   cited:['对公信贷产品完整手册.md','银保监会关于加强小微企业信贷的指导意见.md','信贷审批权限与定价管理.md','公司信贷业务准入标准.md','供应链金融产品体系.md'],
+   a:'<strong>📋 800万小微流贷综合方案（基于本轮 5 次问询）</strong><br><br>① <strong>审批通道</strong>：普惠通道 → 分行二级审批 <span class="cite-ref">权限§1</span><br>② <strong>利率定价</strong>：LPR+15~50BP（约 3.60-3.95%）<span class="cite-ref">权限§3</span><br>③ <strong>担保建议</strong>：核心企业连带担保（首选）<span class="cite-ref">供应链§4</span><br>④ <strong>需补材料</strong>：核心企业付款承诺函、董事会同意决议、近12月流水<br>⑤ <strong>风险关注</strong>：负债率、账款集中度、用途真实性<br><br>👉 已综合 5 份规则文档 9 条结论，全程可追溯审计。'},
+];
+
+function resetChat(){
+  chatTurn=0;
+  chatMemory={window:[],summary:'',entities:{},cited:new Set(),pref:'默认（合规官身份 · 详细引用）'};
+  document.getElementById('chat-messages').innerHTML=`
+    <div class="chat-msg bot"><div class="chat-avatar"><i class="fas fa-robot"></i></div>
+    <div class="chat-bubble">您好，我是信贷合规助手 <strong>CreditCopilot</strong>。我已加载 10 份规则文档（业务规则 / 内部政策 / 监管文件 / 法律法规），可以连续追问。<br>
+    <span class="text-muted fs-11">提示：试试"小微企业最高能贷多少？" → "如果给 800 万呢？" → "那利率怎么算？"</span></div></div>`;
+  document.getElementById('chat-turn-count').textContent='第 0 轮';
+  document.getElementById('chat-rewrite-panel').innerHTML='<div class="r-line"><span class="r-tag">$</span><span class="r-content">发送一条消息后，这里会显示查询改写过程...</span></div>';
+  document.getElementById('mem-window').innerHTML='<span class="ms-empty">空</span>';
+  document.getElementById('mem-summary').innerHTML='<span class="ms-empty">未触发（&lt; 20 轮）</span>';
+  document.getElementById('mem-entities').innerHTML='<span class="ms-empty">未识别</span>';
+  document.getElementById('mem-cited').innerHTML='<span class="ms-empty">未引用</span>';
+  document.getElementById('chat-session').textContent='SES-20260429-'+Math.random().toString(36).slice(2,6).toUpperCase();
+}
+
+function appendChatMsg(role,content){
+  const msgs=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className='chat-msg '+role;
+  const avatar=role==='user'?'<i class="fas fa-user-tie"></i>':'<i class="fas fa-robot"></i>';
+  div.innerHTML=`<div class="chat-avatar">${avatar}</div><div class="chat-bubble">${content}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function updateMemoryPanel(){
+  const winEl=document.getElementById('mem-window');
+  if(chatMemory.window.length===0){winEl.innerHTML='<span class="ms-empty">空</span>';}
+  else winEl.innerHTML=chatMemory.window.slice(-5).map((t,i)=>`<div>[${chatMemory.window.length-5+i+1}] ${t.role==='u'?'👤':'🤖'} ${t.text.slice(0,40)}${t.text.length>40?'...':''}</div>`).join('');
+
+  if(chatTurn>=20)document.getElementById('mem-summary').innerHTML='已触发摘要：客户咨询小微企业 800万流贷的可行性、利率、担保等';
+  else document.getElementById('mem-summary').innerHTML=`<span class="ms-empty">未触发（${chatTurn} / 20 轮）</span>`;
+
+  const entEl=document.getElementById('mem-entities');
+  const ents=Object.entries(chatMemory.entities);
+  if(ents.length===0)entEl.innerHTML='<span class="ms-empty">未识别</span>';
+  else entEl.innerHTML=ents.map(([k,v])=>`<div>${k}: <strong style="color:var(--primary);">${v}</strong></div>`).join('');
+
+  const citEl=document.getElementById('mem-cited');
+  if(chatMemory.cited.size===0)citEl.innerHTML='<span class="ms-empty">未引用</span>';
+  else citEl.innerHTML=[...chatMemory.cited].map(f=>`<div>📑 ${f}</div>`).join('');
+}
+
+async function processChat(userInput){
+  // 找剧本匹配
+  const script=CHAT_SCRIPT.find(s=>userInput.includes(s.q.slice(0,4))||s.q.includes(userInput.slice(0,4)))||CHAT_SCRIPT[Math.min(chatTurn,CHAT_SCRIPT.length-1)];
+
+  chatTurn++;
+  document.getElementById('chat-turn-count').textContent='第 '+chatTurn+' 轮';
+  appendChatMsg('user',userInput);
+  chatMemory.window.push({role:'u',text:userInput});
+
+  // 改写过程
+  const rwPanel=document.getElementById('chat-rewrite-panel');
+  rwPanel.innerHTML='';
+  logRetrieval(rwPanel,'[USER]',userInput,'q');
+  if(chatTurn>1)logRetrieval(rwPanel,'[CONTEXT]','检测到指代/省略，注入实体记忆: '+JSON.stringify(chatMemory.entities),'h');
+  await sleep(400);
+  logRetrieval(rwPanel,'[REWRITER]','LLM 改写为 3 条精确查询：','q');
+  for(const v of script.rewrite){logRetrieval(rwPanel,'   →',v);await sleep(150);}
+  logRetrieval(rwPanel,'[RETRIEVE]',`混合检索 → 命中 ${script.cited.length} 份文档`,'s');
+
+  // bot 思考动画
+  const thinking=document.createElement('div');
+  thinking.className='chat-msg bot';
+  thinking.innerHTML='<div class="chat-avatar"><i class="fas fa-robot"></i></div><div class="chat-bubble"><span class="loader"></span> 正在检索 + 推理...</div>';
+  document.getElementById('chat-messages').appendChild(thinking);
+  await sleep(800);
+  thinking.remove();
+  appendChatMsg('bot',script.a);
+  chatMemory.window.push({role:'b',text:script.a.replace(/<[^>]*>/g,'').slice(0,80)});
+  Object.assign(chatMemory.entities,script.entities);
+  script.cited.forEach(c=>chatMemory.cited.add(c));
+  updateMemoryPanel();
+}
+
+function sendChat(){
+  const input=document.getElementById('chat-input');
+  const v=input.value.trim();
+  if(!v)return;
+  input.value='';
+  processChat(v);
+}
+function useSuggestion(el){document.getElementById('chat-input').value=el.textContent;sendChat();}
+async function runChatScript(){
+  resetChat();
+  for(const s of CHAT_SCRIPT){
+    await sleep(500);
+    await processChat(s.q);
+    await sleep(1400);
+  }
+}
+
+// ============================================================
+// 场景 3：产品方案比对
+// ============================================================
+const COMPARE_DATA={
+  '应收账款':{
+    need:'1000万应收账款融资 · 期限 6 月',
+    products:[
+      {name:'银行保理',rank:'⭐ 推荐',score:0.92,
+        items:{'融资额度':'最高 90%（900万）','融资期限':'≤ 账期 90 天','利率':'LPR+50~80BP','审批层级':'分行','所需材料':'保理协议+应收账款转让通知+核心企业确认','行内权限':'≤2亿','适用条件':'核心企业 AA+ 以上','风险点':'核心企业违约风险'},
+        bestKeys:['融资期限','审批层级','所需材料']},
+      {name:'应收账款质押贷',rank:'备选',score:0.85,
+        items:{'融资额度':'最高 70%（700万）','融资期限':'≤ 1 年','利率':'LPR+30~80BP','审批层级':'分行','所需材料':'借款合同+质押合同+办理质押登记','行内权限':'≤2亿','适用条件':'账款真实可核验','风险点':'账款质押公示成本'},
+        bestKeys:['融资额度','利率']},
+      {name:'供应链 e 销贷',rank:'备选',score:0.81,
+        items:{'融资额度':'最高 80%（800万）','融资期限':'≤ 6 月','利率':'LPR+30~60BP','审批层级':'支行(白名单)','所需材料':'核心企业平台数据+电子合同','行内权限':'白名单 5000万','适用条件':'核心企业接入行内平台','风险点':'依赖核心企业数据真实性'},
+        bestKeys:['利率','审批层级','所需材料']},
+      {name:'票据贴现',rank:'⚠ 不适用',score:0.42,
+        items:{'融资额度':'根据票面','融资期限':'≤ 6 月','利率':'DR007+50BP','审批层级':'支行','所需材料':'银票/商票','行内权限':'5000万','适用条件':'必须为银行承兑或商业承兑汇票','风险点':'本场景为应收账款，非票据'},
+        bestKeys:['利率','审批层级']}
+    ],
+    rec:`<h3>🎯 综合推荐：银行保理</h3>
+<div class="check ok"><i class="fas fa-check-circle"></i><span><strong>最佳匹配理由</strong>：本场景为"应收账款 + 90天账期 + 6月内回笼"，与保理产品周期完美契合<span class="cite">（依据：供应链金融产品体系.md - §3.1）</span></span></div>
+<div class="check ok"><i class="fas fa-check-circle"></i><span><strong>融资效率最高</strong>：90% 比例 vs 质押贷 70%，多融 200 万，且无需办理质押登记<span class="cite">（依据：供应链金融产品体系.md - §3.2）</span></span></div>
+<div class="check ok"><i class="fas fa-check-circle"></i><span><strong>权限路径短</strong>：分行直审，平均放款时效 5 工作日<span class="cite">（依据：信贷审批权限与定价管理.md - §1）</span></span></div>
+<h3>📊 产品筛选 RAG 推理过程</h3>
+<div class="check ok"><i class="fas fa-search"></i><span>检索维度 1：按"应收账款 期限 6月"召回 → 命中 保理 / 质押贷 / e销贷 / 票据贴现 4 个候选</span></div>
+<div class="check ok"><i class="fas fa-search"></i><span>检索维度 2：按"账期 90天"过滤 → 票据贴现明显不匹配（场景为账款非票据）</span></div>
+<div class="check ok"><i class="fas fa-search"></i><span>检索维度 3：按"额度1000万 期限6月"打分 → 保理（92%）&gt; 质押贷（85%）&gt; e销贷（81%）&gt; 贴现（42%）</span></div>
+<h3>📋 下一步建议</h3>
+<div class="check warn"><i class="fas fa-exclamation-triangle"></i><span>需先核实核心企业资信（要求 AA+ 以上行内白名单），否则降级走应收账款质押贷</span></div>
+<div class="check warn"><i class="fas fa-exclamation-triangle"></i><span>建议补充：核心企业近 24 个月付款记录、账款发票、合同正本</span></div>`
+  },
+  '采购付款':{
+    need:'上游采购付款 · 1500万 · 期限 6 月',
+    products:[
+      {name:'供应链 e 点贷',rank:'⭐ 推荐',score:0.93,
+        items:{'融资额度':'1500万','融资期限':'≤ 1 年','利率':'LPR+20~50BP','审批层级':'支行白名单','所需材料':'核心企业拆单+采购合同','行内权限':'5000万','适用条件':'核心企业开点','风险点':'依赖核心企业'},
+        bestKeys:['利率','审批层级','所需材料']},
+      {name:'国内信用证',rank:'备选',score:0.84,
+        items:{'融资额度':'1500万','融资期限':'≤ 1 年','利率':'手续费 1.5‰','审批层级':'分行','所需材料':'L/C 单据+贸易合同','行内权限':'1亿','适用条件':'境内贸易','风险点':'单据复杂'},
+        bestKeys:['融资期限']},
+      {name:'流动资金贷款',rank:'通用',score:0.78,
+        items:{'融资额度':'1500万','融资期限':'≤ 1 年','利率':'LPR+30~80BP','审批层级':'支行（≤2000万）','所需材料':'借款合同+用途证明+流水','行内权限':'2亿','适用条件':'AA以上','风险点':'用途监控'},
+        bestKeys:['行内权限']},
+      {name:'银行承兑汇票',rank:'备选',score:0.75,
+        items:{'融资额度':'1500万','融资期限':'≤ 6 月','利率':'手续费 0.5‰+保证金','审批层级':'支行','所需材料':'承兑协议+贸易合同','行内权限':'5000万','适用条件':'有真实贸易','风险点':'到期付款责任'},
+        bestKeys:['利率','审批层级']}
+    ],
+    rec:`<h3>🎯 综合推荐：供应链 e 点贷</h3>
+<div class="check ok"><i class="fas fa-check-circle"></i><span>核心企业开点的 e 点贷利率最低（LPR+20~50BP），且支行白名单审批最快<span class="cite">（依据：供应链金融产品体系.md - §1）</span></span></div>
+<div class="check ok"><i class="fas fa-check-circle"></i><span>1500万 ≤ 白名单授信上限 5000万，无需层报<span class="cite">（依据：信贷审批权限与定价管理.md）</span></span></div>`
+  },
+  '短期周转':{
+    need:'短期资金周转 · 500万 · 30天',
+    products:[
+      {name:'流动资金贷款',rank:'通用',score:0.82,items:{'融资额度':'500万','融资期限':'1~12月','利率':'LPR+30BP','审批层级':'支行','所需材料':'用途证明+流水','行内权限':'2亿','适用条件':'A级以上','风险点':'用途监控'},bestKeys:['融资额度','审批层级']},
+      {name:'银行承兑汇票',rank:'⭐ 推荐',score:0.91,items:{'融资额度':'500万','融资期限':'≤ 6 月','利率':'手续费 0.5‰','审批层级':'支行','所需材料':'承兑协议','行内权限':'5000万','适用条件':'有真实贸易','风险点':'到期付款'},bestKeys:['利率','审批层级','所需材料']},
+      {name:'票据贴现',rank:'备选',score:0.86,items:{'融资额度':'按票面','融资期限':'≤ 6 月','利率':'DR007+30BP','审批层级':'支行','所需材料':'已收银/商票','行内权限':'5000万','适用条件':'已持票','风险点':'票据真实性'},bestKeys:['利率']},
+      {name:'透支额度',rank:'备选',score:0.71,items:{'融资额度':'500万','融资期限':'随借随还','利率':'LPR+50BP','审批层级':'支行','所需材料':'透支协议','行内权限':'2000万','适用条件':'AA以上','风险点':'信用敞口'},bestKeys:['融资期限']}
+    ],
+    rec:`<h3>🎯 综合推荐：银行承兑汇票</h3>
+<div class="check ok"><i class="fas fa-check-circle"></i><span>30 天周转最划算，承兑手续费仅 0.5‰，远低于流贷利息<span class="cite">（依据：票据业务操作规范.md）</span></span></div>`
+  }
+};
+
+function loadCompareCase(key){
+  const data=COMPARE_DATA[key];
+  document.getElementById('cp-need').value=data.need;
+  document.getElementById('cp-amount').value=data.need.match(/\d+/)?.[0]||'1000';
+  setTimeout(()=>runCompare(key),200);
+}
+async function runCompare(key){
+  const k=key||'应收账款';
+  const data=COMPARE_DATA[k];
+  document.getElementById('cp-process-card').style.display='';
+  document.getElementById('cp-table-card').style.display='';
+  document.getElementById('cp-recommend-card').style.display='';
+  const panel=document.getElementById('cp-retrieval');
+  panel.innerHTML='';
+  logRetrieval(panel,'[NEED]',data.need,'q');
+  await sleep(300);
+  logRetrieval(panel,'[STEP 1]','LLM 解析诉求 → 提取关键信号：场景 / 期限 / 金额 / 期望成本','q');
+  await sleep(300);
+  logRetrieval(panel,'[STEP 2]','并行启动 4 类产品检索（保理 / 质押贷 / e销贷 / 票据贴现）','q');
+  await sleep(200);
+  for(const p of data.products){
+    logRetrieval(panel,'[PROD]',`检索《${p.name}》→ 匹配度 <span class="r-score">${p.score.toFixed(2)}</span> · ${p.rank}`,'h');
+    await sleep(150);
+  }
+  await sleep(200);
+  logRetrieval(panel,'[STEP 3]','跨产品要素对齐：额度 / 期限 / 利率 / 担保 / 审批 / 材料','q');
+  await sleep(300);
+  logRetrieval(panel,'[STEP 4]','按场景适配度打分排序 + 标注每行最优值','q');
+  await sleep(300);
+  logRetrieval(panel,'[LLM]','综合推理生成最终推荐 + 引用溯源','r');
+  await sleep(500);
+  logRetrieval(panel,'[DONE]','比对矩阵 + 推荐方案已生成','s');
+
+  // render table
+  const dims=['融资额度','融资期限','利率','审批层级','所需材料','行内权限','适用条件','风险点'];
+  const tbl=document.getElementById('cp-table');
+  let html='<thead><tr><th>对比维度</th>';
+  for(const p of data.products){html+=`<th class="product-head"><div class="p-name">${p.name}</div><div class="p-rank">${p.rank} · 匹配度 ${(p.score*100).toFixed(0)}%</div></th>`;}
+  html+='</tr></thead><tbody>';
+  for(const d of dims){
+    html+=`<tr><td>${d}</td>`;
+    for(const p of data.products){
+      const cls=p.bestKeys.includes(d)?'best-cell':'';
+      html+=`<td class="${cls}">${p.items[d]||'—'}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</tbody>';
+  tbl.innerHTML=html;
+  document.getElementById('cp-recommend').innerHTML=data.rec;
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+showPage('prereview');
+</script>
+
+</body>
+</html>

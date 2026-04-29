@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRD · 银行公司业务智能小助手</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{
+  --primary:#1E3A5F; --primary-light:#2A4A73; --primary-dark:#152D4A;
+  --accent-gold:#C9A84C; --accent-gold-light:#E8D48B;
+  --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#FAFBFC;
+  --text-primary:#1A1A2E; --text-secondary:#475569; --text-muted:#94A3B8;
+  --border:#E2E8F0; --border-light:#F1F5F9;
+  --success:#16A34A; --success-bg:#F0FDF4;
+  --warning:#D97706; --warning-bg:#FFFBEB;
+  --danger:#DC2626; --danger-bg:#FEF2F2;
+  --info:#0284C7; --info-bg:#F0F9FF;
+  --purple:#7C3AED; --purple-bg:#F5F3FF;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.07),0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08);
+  --radius:8px; --radius-lg:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans SC','Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text-primary);line-height:1.7;font-size:14px;}
+
+/* Top bar */
+.top-bar{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#FFF;padding:14px 32px;position:fixed;top:0;left:0;right:0;z-index:1000;box-shadow:0 2px 12px rgba(30,58,95,0.3);display:flex;align-items:center;justify-content:space-between;}
+.top-bar .brand{display:flex;align-items:center;gap:12px;}
+.top-bar .logo{width:36px;height:36px;background:var(--accent-gold);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--primary-dark);font-size:16px;font-weight:700;}
+.top-bar h1{font-size:15px;font-weight:600;letter-spacing:0.02em;}
+.top-bar .sub{font-size:11px;opacity:0.7;margin-top:1px;}
+.top-bar .actions{display:flex;gap:10px;align-items:center;}
+.top-bar .btn{padding:6px 14px;background:rgba(255,255,255,0.1);color:#FFF;border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.top-bar .btn:hover{background:rgba(255,255,255,0.2);}
+.top-bar .btn.gold{background:var(--accent-gold);border-color:var(--accent-gold);color:var(--primary-dark);font-weight:600;}
+
+/* Layout */
+.layout{display:block;margin-top:64px;min-height:calc(100vh - 64px);}
+
+/* TOC sidebar */
+.toc{position:fixed;top:64px;bottom:0;left:0;width:280px;overflow-y:auto;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;}
+.toc-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;padding:0 24px 12px;}
+.toc-list{list-style:none;}
+.toc-list li{margin-bottom:1px;}
+.toc-list a{display:flex;align-items:center;gap:10px;padding:8px 24px;color:var(--text-secondary);text-decoration:none;font-size:13px;border-left:3px solid transparent;transition:all 0.15s;}
+.toc-list a:hover{background:var(--bg);color:var(--text-primary);}
+.toc-list a.active{background:rgba(30,58,95,0.06);color:var(--primary);border-left-color:var(--primary);font-weight:600;}
+.toc-list a .num{display:inline-block;width:22px;height:22px;background:var(--bg);border-radius:50%;text-align:center;font-size:11px;line-height:22px;font-weight:700;color:var(--text-muted);flex-shrink:0;}
+.toc-list a.active .num{background:var(--primary);color:#FFF;}
+
+/* Main */
+.main{margin-left:280px;padding:32px 48px 80px;max-width:1100px;}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#FFF;border-radius:var(--radius-lg);padding:36px;margin-bottom:32px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(201,168,76,0.2) 0%,transparent 70%);}
+.hero .badge{display:inline-block;background:var(--accent-gold);color:var(--primary-dark);font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:12px;letter-spacing:0.05em;}
+.hero h1{font-size:30px;font-weight:700;margin-bottom:6px;position:relative;}
+.hero .subtitle{font-size:14px;opacity:0.85;margin-bottom:22px;position:relative;}
+.hero-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative;}
+.hero-meta .item{border-left:3px solid var(--accent-gold);padding-left:12px;}
+.hero-meta .label{font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;}
+.hero-meta .value{font-size:14px;font-weight:600;margin-top:2px;color:var(--accent-gold-light);}
+
+/* Sections */
+section{margin-bottom:36px;}
+section h2{font-size:24px;font-weight:700;color:var(--primary);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--accent-gold);display:flex;align-items:center;gap:12px;scroll-margin-top:90px;}
+section h2 .section-num{width:36px;height:36px;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#FFF;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;}
+section h3{font-size:17px;font-weight:700;color:var(--primary-dark);margin:22px 0 10px;display:flex;align-items:center;gap:8px;}
+section h3::before{content:'';width:3px;height:16px;background:var(--accent-gold);border-radius:2px;display:inline-block;}
+section h4{font-size:14px;font-weight:600;color:var(--text-primary);margin:14px 0 8px;}
+section p{color:var(--text-secondary);margin-bottom:10px;}
+section ul,section ol{padding-left:22px;margin-bottom:10px;color:var(--text-secondary);}
+section ul li,section ol li{margin-bottom:4px;}
+section strong{color:var(--text-primary);font-weight:700;}
+section em{color:var(--accent-gold);font-style:normal;font-weight:600;}
+section u{text-decoration:underline;text-decoration-color:var(--accent-gold);text-underline-offset:3px;}
+section code{background:var(--bg);color:var(--primary);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12.5px;border:1px solid var(--border-light);}
+section pre{background:#0F172A;color:#E2E8F0;padding:16px 18px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.6;overflow-x:auto;margin:12px 0;}
+section pre code{background:transparent;color:inherit;border:none;padding:0;}
+section blockquote{border-left:4px solid var(--accent-gold);background:#FFFBEB;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0;color:var(--text-secondary);}
+section blockquote p:last-child{margin-bottom:0;}
+section a{color:var(--primary);text-decoration:none;border-bottom:1px dotted var(--primary);}
+section a:hover{color:var(--accent-gold);border-bottom-color:var(--accent-gold);}
+section hr{border:none;height:1px;background:var(--border);margin:24px 0;}
+
+/* Tables */
+section table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;background:var(--surface);box-shadow:var(--shadow-sm);border-radius:8px;overflow:hidden;}
+section table th{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#FFF;text-align:left;padding:10px 14px;font-weight:600;font-size:12.5px;}
+section table td{padding:10px 14px;border-bottom:1px solid var(--border-light);color:var(--text-secondary);vertical-align:top;}
+section table tr:last-child td{border-bottom:none;}
+section table tr:nth-child(even){background:var(--surface-2);}
+section table tr:hover{background:var(--info-bg);}
+section table td:first-child{font-weight:600;color:var(--text-primary);}
+
+/* Card sections (boxed) */
+.card-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;box-shadow:var(--shadow-sm);}
+
+/* Status pills inside content */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.pill-success{background:var(--success-bg);color:var(--success);}
+.pill-warning{background:var(--warning-bg);color:var(--warning);}
+.pill-danger{background:var(--danger-bg);color:var(--danger);}
+.pill-info{background:var(--info-bg);color:var(--info);}
+.pill-purple{background:var(--purple-bg);color:var(--purple);}
+.pill-gold{background:#FEF6E0;color:#92750E;}
+
+/* Doc info card */
+.doc-info{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent-gold);border-radius:8px;padding:16px 22px;margin-bottom:24px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.doc-info .info-item{display:flex;flex-direction:column;gap:2px;}
+.doc-info .info-item .key{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+.doc-info .info-item .val{font-size:13px;font-weight:600;color:var(--text-primary);}
+
+/* Print */
+@media print{
+  .top-bar,.toc{display:none;}
+  .layout{grid-template-columns:1fr;margin-top:0;}
+  .main{margin-left:0;max-width:100%;padding:20px;}
+  section{break-inside:avoid;}
+  .hero{background:var(--primary)!important;-webkit-print-color-adjust:exact;}
+}
+
+/* Floating progress */
+.progress-bar{position:fixed;top:64px;left:280px;right:0;height:3px;background:var(--border-light);z-index:999;}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent-gold),var(--primary));width:0%;transition:width 0.1s;}
+
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="brand">
+    <div class="logo"><i class="fas fa-file-contract"></i></div>
+    <div>
+      <h1>PRD · 银行公司业务智能小助手</h1>
+      <div class="sub">Corporate Banking Co-pilot · Wiki-RAG · v1.0</div>
+    </div>
+  </div>
+  <div class="actions">
+    <a href="../demo_web/index.html" class="btn"><i class="fas fa-external-link-alt"></i> 查看 Demo</a>
+    <a href="PRD-银行公司业务智能小助手.md" class="btn" download><i class="fas fa-download"></i> 下载 MD</a>
+    <a href="javascript:window.print()" class="btn gold"><i class="fas fa-print"></i> 打印 / PDF</a>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="fill" id="progress"></div></div>
+
+<div class="layout">
+
+<!-- TOC -->
+<aside class="toc">
+  <div class="toc-title">目录</div>
+  <ul class="toc-list" id="toc">
+    <li><a href="#sec-1"><span class="num">1</span>产品概述</a></li>
+    <li><a href="#sec-2"><span class="num">2</span>背景与目标</a></li>
+    <li><a href="#sec-3"><span class="num">3</span>用户与场景</a></li>
+    <li><a href="#sec-4"><span class="num">4</span>产品定位</a></li>
+    <li><a href="#sec-5"><span class="num">5</span>功能架构</a></li>
+    <li><a href="#sec-6"><span class="num">6</span>详细功能需求</a></li>
+    <li><a href="#sec-7"><span class="num">7</span>非功能需求</a></li>
+    <li><a href="#sec-8"><span class="num">8</span>技术架构</a></li>
+    <li><a href="#sec-9"><span class="num">9</span>数据规格</a></li>
+    <li><a href="#sec-10"><span class="num">10</span>UI/UX 规范</a></li>
+    <li><a href="#sec-11"><span class="num">11</span>实施路径</a></li>
+    <li><a href="#sec-12"><span class="num">12</span>验收标准</a></li>
+    <li><a href="#sec-13"><span class="num">13</span>风险与依赖</a></li>
+    <li><a href="#sec-14"><span class="num">14</span>附录</a></li>
+  </ul>
+</aside>
+
+<main class="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <span class="badge">PRD · v1.0 · 已评审</span>
+    <h1>银行公司业务智能小助手</h1>
+    <div class="subtitle">Corporate Banking Co-pilot · Wiki-RAG 结构化知识检索增强生成系统</div>
+    <div class="hero-meta">
+      <div class="item"><div class="label">产品代号</div><div class="value">CB-Copilot</div></div>
+      <div class="item"><div class="label">技术形态</div><div class="value">Wiki-RAG</div></div>
+      <div class="item"><div class="label">文档版本</div><div class="value">v1.0 / 2026-04-29</div></div>
+      <div class="item"><div class="label">撰写人</div><div class="value">陈yy（合规官）</div></div>
+    </div>
+  </div>
+
+  <!-- Doc info -->
+  <div class="doc-info">
+    <div class="info-item"><span class="key">状态</span><span class="val"><span class="pill pill-success"><i class="fas fa-check-circle"></i> 已评审 · 可进入开发</span></span></div>
+    <div class="info-item"><span class="key">优先级</span><span class="val"><span class="pill pill-danger">P0 核心</span></span></div>
+    <div class="info-item"><span class="key">交付目标</span><span class="val">2026 Q4</span></div>
+    <div class="info-item"><span class="key">评审签署</span><span class="val">2026-04-29</span></div>
+  </div>
+
+  <!-- §1 产品概述 -->
+  <section id="sec-1">
+    <h2><span class="section-num">1</span>产品概述</h2>
+
+    <h3>1.1 一句话定义</h3>
+    <p><strong>面向银行公司业务条线的智能合规助手</strong>，把分散在 10+ 份业务规则、内部政策、监管文件、法律法规中的碎片化知识，通过 <em>Wiki-RAG</em> 技术融合为可推理、可引用、可审计的合规决策能力。</p>
+
+    <h3>1.2 核心价值</h3>
+    <table>
+      <thead><tr><th style="width:20%;">价值维度</th><th>描述</th></tr></thead>
+      <tbody>
+        <tr><td><i class="fas fa-bolt text-warning"></i> 效率</td><td>客户经理一笔预审从 30-60 分钟 → 2-3 秒，效率提升 600 倍</td></tr>
+        <tr><td><i class="fas fa-bullseye"></i> 准确</td><td>单笔预审跨文件命中 5-8 份规则，杜绝漏审 / 错审</td></tr>
+        <tr><td><i class="fas fa-shield-alt"></i> 合规</td><td>每条结论必带文件名 + 原文引用，全程留痕可审计</td></tr>
+        <tr><td><i class="fas fa-clock"></i> 时效</td><td>监管新规当天入库即生效，无需重训模型</td></tr>
+        <tr><td><i class="fas fa-lock"></i> 私有</td><td>行内审批权限 / 定价底线 / 内部流程 注入到每次推理</td></tr>
+      </tbody>
+    </table>
+
+    <h3>1.3 关键差异（与普通 RAG）</h3>
+    <p>本产品采用 <em>Wiki-RAG</em> 架构 —— 把规则建模为「<u>有命名空间 / 有层级 / 有引用 / 有版本 / 有权限</u>」的知识网络，而非扁平片段集合。</p>
+  </section>
+
+  <!-- §2 背景与目标 -->
+  <section id="sec-2">
+    <h2><span class="section-num">2</span>背景与目标</h2>
+
+    <h3>2.1 业务痛点</h3>
+    <table>
+      <thead><tr><th>痛点</th><th>当前现状</th><th>影响</th></tr></thead>
+      <tbody>
+        <tr><td>规则散落</td><td>10+ 份文档分散在 OA / 共享盘 / 法务系统</td><td>客户经理逐份翻查</td></tr>
+        <tr><td>表述不一</td><td>"小微 / 普惠 / 中小微" 同义不同名</td><td>关键词搜索召回不全</td></tr>
+        <tr><td>时效混乱</td><td>旧规未废止、新规未公示并存</td><td>审批引用过期条款</td></tr>
+        <tr><td>综合判断难</td><td>一笔申请涉及准入/期限/担保/定价/审批 5+ 维度</td><td>业务员易漏审，分行打回</td></tr>
+        <tr><td>合规审计弱</td><td>LLM 直接答复无引用 → 不可追溯</td><td>监管检查存在风险</td></tr>
+      </tbody>
+    </table>
+
+    <h3>2.2 商业目标（OKR）</h3>
+    <p><strong>O：把公司业务条线的合规预审从"经验依赖"升级为"知识库驱动"</strong></p>
+    <table>
+      <thead><tr><th style="width:80px;">KR</th><th>衡量指标</th><th style="width:120px;">目标值</th></tr></thead>
+      <tbody>
+        <tr><td>KR1</td><td>客户经理预审 TAT（Turn-Around Time）</td><td><span class="pill pill-success">≤ 5 秒</span></td></tr>
+        <tr><td>KR2</td><td>单笔预审规则覆盖率</td><td><span class="pill pill-success">≥ 92%</span></td></tr>
+        <tr><td>KR3</td><td>因规则遗漏导致的二次返工率</td><td><span class="pill pill-success">≤ 3%</span></td></tr>
+        <tr><td>KR4</td><td>合规官人工抽查通过率</td><td><span class="pill pill-success">≥ 95%</span></td></tr>
+        <tr><td>KR5</td><td>月活用户（客户经理 + 审批官）</td><td><span class="pill pill-success">≥ 800 人</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>2.3 不做什么（Out of Scope）</h3>
+    <ul>
+      <li>❌ 不替代正式审批（仅作预审参考）</li>
+      <li>❌ 不接管客户档案管理（仍走核心系统）</li>
+      <li>❌ 不直接落账、不发起放款</li>
+      <li>❌ 不处理零售个人贷款（本期仅公司业务）</li>
+    </ul>
+  </section>
+
+  <!-- §3 用户与场景 -->
+  <section id="sec-3">
+    <h2><span class="section-num">3</span>用户与场景</h2>
+
+    <h3>3.1 目标用户</h3>
+    <table>
+      <thead><tr><th>角色</th><th>主要诉求</th><th>使用频率</th></tr></thead>
+      <tbody>
+        <tr><td><strong>客户经理</strong></td><td>录入申请→快速预审→生成材料清单</td><td>每天 5-10 次</td></tr>
+        <tr><td><strong>支行审批官</strong></td><td>校验客户经理结论、查阅原文依据</td><td>每天 10-20 次</td></tr>
+        <tr><td><strong>分行风控官</strong></td><td>复核高风险申请、查询监管最新口径</td><td>每天 5 次</td></tr>
+        <tr><td><strong>合规官（陈yy）</strong></td><td>维护知识库、审核新文档入库、处理临时通知</td><td>每周 5-10 次</td></tr>
+        <tr><td><strong>总行业务专家</strong></td><td>检索行内政策、撰写新规时参考历史</td><td>每月数次</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 用户旅程（客户经理 · 主流程）</h3>
+<pre><code>① 收到客户申请意向
+        ↓
+② 打开"信贷预审合规助手"
+        ↓
+③ 录入企业 + 业务要素（&lt; 1 分钟）
+        ↓
+④ 系统并行启动 8 维 RAG 检索（2 秒）
+        ↓
+⑤ 阅读结构化预审报告（含引用）
+        ↓
+   ├── ✅ PASS → 进入正式审批，附材料清单
+   ├── ⚠️  CONDITIONAL → 补材料 / 调整方案后再申报
+   └── ❌ REJECT → 向客户解释，建议改产品
+        ↓
+⑥ 一键导出报告留档</code></pre>
+
+    <h3>3.3 典型场景（3 个核心 + N 个长尾）</h3>
+    <table>
+      <thead><tr><th>#</th><th>场景</th><th>凸显能力</th><th>优先级</th></tr></thead>
+      <tbody>
+        <tr><td>S1</td><td><strong>信贷预审合规助手</strong></td><td>跨文件融合 + 引用溯源 + 结构化推理</td><td><span class="pill pill-danger">P0</span></td></tr>
+        <tr><td>S2</td><td><strong>智能咨询多轮对话</strong></td><td>5 层记忆 + 上下文延续 + 实体追踪</td><td><span class="pill pill-danger">P0</span></td></tr>
+        <tr><td>S3</td><td><strong>产品方案智能比对</strong></td><td>精准检索 + 跨产品关联 + 差异分析</td><td><span class="pill pill-warning">P1</span></td></tr>
+        <tr><td>S4</td><td>监管口径速查</td><td>单文档精确问答</td><td><span class="pill pill-info">P2</span></td></tr>
+        <tr><td>S5</td><td>新规摘要生成</td><td>文档摘要 + 影响分析</td><td><span class="pill pill-info">P2</span></td></tr>
+        <tr><td>S6</td><td>培训问答 / 新人答疑</td><td>知识库分级开放</td><td><span class="pill pill-purple">P3</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- §4 产品定位 -->
+  <section id="sec-4">
+    <h2><span class="section-num">4</span>产品定位</h2>
+
+    <h3>4.1 Wiki-RAG vs 普通 RAG · 立标对比</h3>
+    <table>
+      <thead><tr><th>能力维度</th><th>普通 RAG</th><th>Wiki-RAG（本产品）</th></tr></thead>
+      <tbody>
+        <tr><td>文档建模</td><td>扁平片段集合</td><td><strong>命名空间 + 类目层级</strong>（业务/政策/监管/法规 4 大类）</td></tr>
+        <tr><td>切分策略</td><td>固定窗口滑动切分</td><td><strong>语义感知</strong>：按"第X条/第X章/(一)(二)"切分</td></tr>
+        <tr><td>检索方式</td><td>纯向量相似度</td><td><strong>混合检索</strong>（语义 α=0.6 + BM25 0.4）+ RRF 融合</td></tr>
+        <tr><td>知识关联</td><td>片段彼此独立</td><td><strong>同义词桥接 + 跨文档引用 + 实体追踪</strong></td></tr>
+        <tr><td>单查询召回</td><td>1 次查询 → top-k</td><td><strong>多查询并行</strong>：原始 + 改写 2 + 8 维预设模板</td></tr>
+        <tr><td>引用溯源</td><td>无引用</td><td><strong>每条结论必带文件名 + 原文关键句</strong></td></tr>
+        <tr><td>对话记忆</td><td>无状态</td><td><strong>5 层记忆</strong>（窗口/摘要/实体/引用/偏好）</td></tr>
+        <tr><td>知识更新</td><td>重建全量索引</td><td><strong>增量入库</strong>（SHA256 去重）+ 软删除</td></tr>
+        <tr><td>合规审计</td><td>无法追溯</td><td><strong>全程留痕</strong></td></tr>
+        <tr><td>权限管控</td><td>统一暴露</td><td><strong>RBAC</strong> 按文档分级</td></tr>
+      </tbody>
+    </table>
+
+    <h3>4.2 一句话区分</h3>
+    <blockquote>
+      <p><strong>普通 RAG</strong>：把文档塞进向量库，检索相似句子。</p>
+      <p><strong>Wiki-RAG（本产品）</strong>：把规则建模成知识网络，检索"<u>有命名空间 / 有层级 / 有引用 / 有版本 / 有权限</u>"的知识节点，并具备<u>跨轮记忆</u>。</p>
+    </blockquote>
+  </section>
+
+  <!-- §5 功能架构 -->
+  <section id="sec-5">
+    <h2><span class="section-num">5</span>功能架构</h2>
+
+    <h3>5.1 信息架构（IA）</h3>
+<pre><code>银行公司业务智能小助手
+├── 业务场景
+│   ├── 信贷预审合规助手    ★ P0（首屏默认页）
+│   ├── 智能咨询多轮对话    ★ P0
+│   └── 产品方案智能比对    P1
+├── 知识库
+│   ├── 知识库总览
+│   └── 摄入流水线
+├── 运营
+│   ├── RAG 知识库日志      ★ 新增
+│   └── 系统设置
+└── 系统
+    └── 系统架构总览</code></pre>
+
+    <h3>5.2 全局功能模块</h3>
+    <table>
+      <thead><tr><th style="width:20%;">模块</th><th>子能力</th></tr></thead>
+      <tbody>
+        <tr><td><strong>接入层</strong></td><td>Web UI / REST API / SSE 流式 / CLI</td></tr>
+        <tr><td><strong>场景层</strong></td><td>预审 / 咨询 / 比对 / 监管查询</td></tr>
+        <tr><td><strong>检索层</strong></td><td>查询改写 / 混合检索 / 多查询并行 / 重排</td></tr>
+        <tr><td><strong>知识层</strong></td><td>文档摄入 / 语义分块 / 元数据管理 / 版本控制</td></tr>
+        <tr><td><strong>存储层</strong></td><td>ChromaDB（向量）/ SQLite FTS5（关键词）/ MetaStore（元数据）</td></tr>
+        <tr><td><strong>生成层</strong></td><td>Claude Sonnet 4.6 / 强约束 prompt / 引用渲染</td></tr>
+        <tr><td><strong>运营层</strong></td><td>知识库日志 / 审计追溯 / 权限管控</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- §6 详细功能需求 -->
+  <section id="sec-6">
+    <h2><span class="section-num">6</span>详细功能需求</h2>
+
+    <h3>6.1 场景 1：信贷预审合规助手（P0）</h3>
+    <h4>6.1.1 功能描述</h4>
+    <p>客户经理在表单中录入企业 + 业务要素，系统并行启动 8 个维度的 RAG 检索，2-5 秒内生成结构化预审报告。</p>
+
+    <h4>6.1.2 输入字段（13 项）</h4>
+    <table>
+      <thead><tr><th>字段</th><th style="width:80px;">类型</th><th style="width:60px;">必填</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>企业名称</td><td>文本</td><td>✅</td><td></td></tr>
+        <tr><td>成立年份</td><td>数字</td><td>✅</td><td>用于推算经营年限</td></tr>
+        <tr><td>所属行业</td><td>文本</td><td>✅</td><td>触发行业准入查询</td></tr>
+        <tr><td>企业类型</td><td>枚举</td><td>✅</td><td>小微/中型/大型</td></tr>
+        <tr><td>年营业收入(万)</td><td>数字</td><td>✅</td><td></td></tr>
+        <tr><td>资产负债率(%)</td><td>数字</td><td>✅</td><td>触发财务准入查询</td></tr>
+        <tr><td>内部评级</td><td>枚举</td><td>✅</td><td>AAA/AA/A/BBB/BB</td></tr>
+        <tr><td>不良记录</td><td>布尔</td><td>✅</td><td></td></tr>
+        <tr><td>产品类型</td><td>枚举</td><td>✅</td><td>流贷/固贷/并购/票据/ABS</td></tr>
+        <tr><td>申请金额(万)</td><td>数字</td><td>✅</td><td>触发权限查询</td></tr>
+        <tr><td>期限(月)</td><td>数字</td><td>✅</td><td></td></tr>
+        <tr><td>贷款用途</td><td>文本</td><td>✅</td><td>触发用途合规检查</td></tr>
+        <tr><td>担保方式 + 估值</td><td>复合</td><td>✅</td><td>触发质押率检查</td></tr>
+      </tbody>
+    </table>
+
+    <h4>6.1.3 处理流程</h4>
+<pre><code>1. 构造 8 维检索查询（RETRIEVAL_QUERIES 模板填充）
+2. 每条查询经 QueryRewriter 派生 2 个变体 → 24 次检索
+3. 并行执行混合检索（ChromaDB + SQLite FTS5）
+4. 按 chunk_id 合并去重，取 max(score)，保留 top-12
+5. 拼装 system prompt + 申请描述 + 检索内容
+6. Claude Sonnet 4.6 流式生成 8 段式报告
+7. 解析结论（PASS/CONDITIONAL/REJECT），抽取来源文件
+8. 渲染：检索动画 + 命中文件表 + 报告 + Verdict 卡片</code></pre>
+
+    <h4>6.1.4 输出格式（8 段式报告）</h4>
+    <ol>
+      <li>一、基本准入审查</li>
+      <li>二、额度与期限合规性</li>
+      <li>三、担保合规性</li>
+      <li>四、定价建议</li>
+      <li>五、审批权限建议</li>
+      <li>六、风险提示</li>
+      <li>七、预审结论（PASS / CONDITIONAL / REJECT）</li>
+      <li>八、所需材料清单</li>
+    </ol>
+    <p>每条结论格式：<code>✅/⚠️/❌ [条件名]：[判断]（依据：[文件名] - [原文关键句]）</code></p>
+
+    <h4>6.1.5 性能要求</h4>
+    <ul>
+      <li>端到端 ≤ 5 秒（P95）</li>
+      <li>单笔命中 ≥ 5 份规则文档</li>
+      <li>引用召回率 ≥ 95%</li>
+    </ul>
+
+    <hr>
+
+    <h3>6.2 场景 2：智能咨询多轮对话（P0）</h3>
+    <h4>6.2.1 功能描述</h4>
+    <p>客户经理可以连续提问，系统通过 5 层记忆机制实现指代消解、上下文延续、实体追踪。</p>
+
+    <h4>6.2.2 5 层记忆机制</h4>
+    <table>
+      <thead><tr><th>层级</th><th>范围</th><th>触发条件</th><th>实现</th></tr></thead>
+      <tbody>
+        <tr><td>① 短期窗口</td><td>最近 10 轮原文</td><td>始终启用</td><td>sliding window</td></tr>
+        <tr><td>② 长期摘要</td><td>&gt; 10 轮的对话压缩</td><td>turn ≥ 20</td><td>LLM summarize → store</td></tr>
+        <tr><td>③ 实体追踪</td><td>企业名 / 金额 / 产品等</td><td>始终启用</td><td>NER + persistent kv</td></tr>
+        <tr><td>④ 引用记忆</td><td>已被引用的文档列表</td><td>始终启用</td><td>doc_id set</td></tr>
+        <tr><td>⑤ 偏好记忆</td><td>角色身份 / 详略风格</td><td>用户主动声明</td><td>user_pref dict</td></tr>
+      </tbody>
+    </table>
+
+    <h4>6.2.3 关键功能点</h4>
+    <ul>
+      <li>指代消解："那 800 万呢" → 自动补全企业类型</li>
+      <li>接续问答："那利率怎么算" → 复用上文实体</li>
+      <li>摘要提示：「请汇总一下」→ 调用所有引用记忆</li>
+      <li>实时可视化：右侧记忆面板展示当前 5 层状态</li>
+    </ul>
+
+    <h4>6.2.4 接口</h4>
+    <ul>
+      <li><code>POST /api/chat</code> { session_id, query }</li>
+      <li><code>GET /api/chat/memory/{session_id}</code> 返回当前记忆状态</li>
+      <li><code>DELETE /api/chat/{session_id}</code> 清空会话</li>
+    </ul>
+
+    <hr>
+
+    <h3>6.3 场景 3：产品方案智能比对（P1）</h3>
+    <h4>6.3.1 处理流程</h4>
+<pre><code>1. LLM 解析诉求 → 提取关键信号（场景/期限/金额/担保/期望）
+2. 按关键信号匹配产品候选池（保理/质押贷/e销贷/票据贴现/...）
+3. 并行检索每个产品的 8 维要素（额度/期限/利率/审批/材料/...）
+4. 按场景适配度打分，标注每行最优值
+5. LLM 生成综合推荐 + 引用溯源</code></pre>
+
+    <h4>6.3.2 对比维度（8 列）</h4>
+    <p>融资额度 / 融资期限 / 利率 / 审批层级 / 所需材料 / 行内权限 / 适用条件 / 风险点</p>
+
+    <hr>
+
+    <h3>6.4 知识库管理（P0）</h3>
+    <h4>6.4.1 知识库总览页</h4>
+    <ul>
+      <li>4 项关键统计：文档总数 / 文本片段 / 向量索引 / 索引大小</li>
+      <li>文档清单按 4 大类目分组：业务规则 / 内部政策 / 监管文件 / 法律法规</li>
+      <li>每份文档显示：chunk 数 / 章节数 / 关键主题</li>
+    </ul>
+
+    <h4>6.4.2 摄入流水线</h4>
+    <ul>
+      <li>6 步处理：扫描加载 → 格式解析 → 数据清洗 → 语义分块 → 向量化 → 双库存储</li>
+      <li>支持格式：PDF / DOCX / MD / XLSX / CSV</li>
+      <li>增量摄入：SHA256 去重，已索引的文档自动跳过</li>
+    </ul>
+
+    <hr>
+
+    <h3>6.5 RAG 知识库日志（P0 · 新增）</h3>
+    <h4>6.5.1 文件状态机</h4>
+<pre><code>            ┌──[审核拒绝]──→[退回]
+            │
+[草稿]──→[审核中]──→[生效中]──┬──→[已废止]（被新版替代 / 主动废止）
+                                │
+                                └──→[暂停使用]（被临时文件覆盖）
+                                       │
+                                       └──→[恢复生效]（临时文件到期）</code></pre>
+
+    <h4>6.5.2 元数据字段（每份文档必填）</h4>
+    <table>
+      <thead><tr><th>字段</th><th style="width:90px;">类型</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>文件名</td><td>str</td><td></td></tr>
+        <tr><td>类型</td><td>enum</td><td>常规 / 临时</td></tr>
+        <tr><td>分类</td><td>enum</td><td>业务规则 / 内部政策 / 监管文件 / 法律法规</td></tr>
+        <tr><td>状态</td><td>enum</td><td>生效 / 暂停 / 废止</td></tr>
+        <tr><td>入库时间</td><td>datetime</td><td></td></tr>
+        <tr><td>发布部门 / 发布人</td><td>str</td><td></td></tr>
+        <tr><td>审核状态 / 审核人 / 审核时间</td><td>enum + str + datetime</td><td></td></tr>
+        <tr><td>生效起 / 生效止</td><td>date</td><td>止为 null 表示长期有效</td></tr>
+        <tr><td>废止日期</td><td>date / null</td><td></td></tr>
+        <tr><td>覆盖文件 ID</td><td>list</td><td>仅临时文件需要</td></tr>
+        <tr><td>被覆盖标记</td><td>bool</td><td>常规文件被临时覆盖时为 true</td></tr>
+      </tbody>
+    </table>
+
+    <h4>6.5.3 临时文件 → 常规文件覆盖机制（关键）</h4>
+    <p><strong>业务规则：</strong></p>
+    <ol>
+      <li>临时文件入库时声明 <code>覆盖文件 ID</code></li>
+      <li>系统将被覆盖的常规文件状态置为「<span class="pill pill-warning">暂停使用</span>」</li>
+      <li>检索时优先返回临时文件片段</li>
+      <li>临时文件到期（定时任务每天 00:00 检查）：
+        <ul>
+          <li>状态 → <span class="pill pill-danger">已废止</span>，废止日期 = 到期日期</li>
+          <li>同步将被覆盖的常规文件恢复「<span class="pill pill-success">生效</span>」</li>
+        </ul>
+      </li>
+      <li>全程留痕，操作记录写入变更日志</li>
+    </ol>
+
+    <blockquote>
+      <p><strong>示例</strong>：《阶段性提高小微企业流贷单户限额的临时通知（2026年第3号）》</p>
+      <p>· 类型：临时</p>
+      <p>· 有效期：2026-04-01 ~ 2026-06-30</p>
+      <p>· 覆盖：《对公信贷产品完整手册》§1.4 小微限额条款</p>
+      <p>· 后果：该手册状态变为「暂停使用」+ 红色删除线</p>
+    </blockquote>
+
+    <h4>6.5.4 UI 要求</h4>
+    <ul>
+      <li>顶部统计卡：生效中 / 暂停中 / 已废止 / 临时文件数（含倒计时）</li>
+      <li><strong>临时文件区独立成表，金边高亮置顶</strong>，含有效期进度条</li>
+      <li>常规文件清单：被暂停的文件文件名加红色删除线 + "暂停使用"标签</li>
+      <li>已废止文件：红背景 + 删除线 + 半透明</li>
+      <li>底部变更日志：按时间倒序，含预定的自动化操作</li>
+    </ul>
+  </section>
+
+  <!-- §7 非功能需求 -->
+  <section id="sec-7">
+    <h2><span class="section-num">7</span>非功能需求</h2>
+
+    <h3>7.1 性能</h3>
+    <table>
+      <thead><tr><th>指标</th><th>目标值</th></tr></thead>
+      <tbody>
+        <tr><td>单次检索延迟（P95）</td><td><span class="pill pill-success">≤ 800 ms</span></td></tr>
+        <tr><td>端到端响应（P95）</td><td><span class="pill pill-success">≤ 5 秒</span></td></tr>
+        <tr><td>流式首 token 延迟</td><td><span class="pill pill-success">≤ 1.5 秒</span></td></tr>
+        <tr><td>并发支持</td><td><span class="pill pill-success">≥ 50 QPS</span></td></tr>
+        <tr><td>知识库摄入速度</td><td><span class="pill pill-success">≥ 10 文档/分钟</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>7.2 安全 & 合规</h3>
+    <table>
+      <thead><tr><th>项</th><th>要求</th></tr></thead>
+      <tbody>
+        <tr><td>数据传输</td><td>TLS 1.3 全程加密</td></tr>
+        <tr><td>数据存储</td><td>敏感字段 AES-256 加密</td></tr>
+        <tr><td>数据驻留</td><td>不出银行内网（M6 私有化部署）</td></tr>
+        <tr><td>接口鉴权</td><td>OAuth 2.0 + 行内 SSO</td></tr>
+        <tr><td>文档分级</td><td>公开 / 内部 / 机密 / 绝密 4 级</td></tr>
+        <tr><td>审计留痕</td><td>所有问答 30 天内可追溯</td></tr>
+        <tr><td>监管对接</td><td>满足银保监会数据出域规定</td></tr>
+      </tbody>
+    </table>
+
+    <h3>7.3 可用性</h3>
+    <table>
+      <thead><tr><th>项</th><th>目标</th></tr></thead>
+      <tbody>
+        <tr><td>服务可用性</td><td>≥ 99.9%</td></tr>
+        <tr><td>RTO（故障恢复时间）</td><td>≤ 30 分钟</td></tr>
+        <tr><td>RPO（数据丢失）</td><td>0（所有写入实时持久化）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>7.4 准确性（核心 KPI）</h3>
+    <table>
+      <thead><tr><th>指标</th><th>目标</th><th>测量方法</th></tr></thead>
+      <tbody>
+        <tr><td>引用召回率</td><td><span class="pill pill-success">≥ 95%</span></td><td>标注集回归测试</td></tr>
+        <tr><td>引用准确率</td><td><span class="pill pill-success">≥ 90%</span></td><td>文件名 + 章节双重校验</td></tr>
+        <tr><td>结论一致性</td><td><span class="pill pill-success">≥ 92%</span></td><td>同输入 5 次跑动结论一致</td></tr>
+        <tr><td>红线漏审率</td><td><span class="pill pill-success">≤ 1%</span></td><td>月度抽查 200 笔</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- §8 技术架构 -->
+  <section id="sec-8">
+    <h2><span class="section-num">8</span>技术架构</h2>
+
+    <h3>8.1 技术选型（9 个核心组件）</h3>
+    <table>
+      <thead><tr><th>组件</th><th>选型</th><th>关键参数</th></tr></thead>
+      <tbody>
+        <tr><td>LLM 推理</td><td>Claude Sonnet 4.6</td><td><code>max_tokens=2500, temperature=0.0</code></td></tr>
+        <tr><td>Embedding</td><td>sentence-transformers MiniLM</td><td><code>dim=384, batch=32</code></td></tr>
+        <tr><td>向量数据库</td><td>ChromaDB</td><td><code>cosine, HNSW</code></td></tr>
+        <tr><td>关键词检索</td><td>SQLite FTS5 + jieba</td><td><code>k1=1.2, b=0.75</code></td></tr>
+        <tr><td>查询改写</td><td>Claude few-shot</td><td><code>variants=2</code></td></tr>
+        <tr><td>混合检索</td><td>RRF Hybrid</td><td><code>α=0.6, top_k=6</code></td></tr>
+        <tr><td>语义分块</td><td>Custom Chunker</td><td><code>size=500, overlap=80</code></td></tr>
+        <tr><td>文档解析</td><td>pdfplumber / docx / pandas</td><td>5 种格式路由</td></tr>
+        <tr><td>服务层</td><td>FastAPI + Typer</td><td>uvicorn 异步流式</td></tr>
+      </tbody>
+    </table>
+
+    <h3>8.2 数据流（端到端）</h3>
+<pre><code>┌──────────────┐
+│  原始文档     │ PDF/DOCX/MD/XLSX
+└──────┬───────┘
+       ▼
+┌──────────────┐  ┌──────────────┐
+│ DocumentLoader│──│ MetaStore    │ 注册 doc_id, sha256
+└──────┬───────┘  └──────────────┘
+       ▼
+┌──────────────┐
+│ DocumentParser│ → 抽取 raw_text + 表格
+└──────┬───────┘
+       ▼
+┌──────────────┐
+│ DataCleaner  │ → 去噪 / 归一 / 去重
+└──────┬───────┘
+       ▼
+┌──────────────┐
+│ TextChunker  │ → 按"第X条"切 + 滑窗 fallback
+└──────┬───────┘
+       ▼
+┌──────────────┐  ┌──────────────┐
+│  Embedder    │─▶│  ChromaDB    │ 向量索引
+└──────┬───────┘  └──────────────┘
+       ▼
+┌──────────────┐
+│ MetaStore    │─▶ SQLite FTS5（关键词索引）
+└──────────────┘
+
+       ↑↑↑ 离线摄入 ↑↑↑
+─────────────────────────────────────
+       ↓↓↓ 在线检索 ↓↓↓
+
+用户查询 → QueryRewriter → HybridRetriever
+       → MemoryManager → Claude LLM → 报告渲染</code></pre>
+
+    <h3>8.3 关键参数表</h3>
+    <table>
+      <thead><tr><th>参数</th><th style="width:90px;">取值</th><th>调优依据</th></tr></thead>
+      <tbody>
+        <tr><td>chunk_size</td><td><code>500</code></td><td>覆盖完整规则条款</td></tr>
+        <tr><td>chunk_overlap</td><td><code>80</code></td><td>16% 重叠保留上下文</td></tr>
+        <tr><td>embedding_dim</td><td><code>384</code></td><td>多语种 MiniLM 平衡</td></tr>
+        <tr><td>top_k</td><td><code>6</code></td><td>覆盖率 92%</td></tr>
+        <tr><td>hybrid_alpha</td><td><code>0.6</code></td><td>语义为主，关键词辅助</td></tr>
+        <tr><td>rerank_top_n</td><td><code>12</code></td><td>多查询合并后保留</td></tr>
+        <tr><td>score_threshold</td><td><code>0.35</code></td><td>低于视为不相关</td></tr>
+        <tr><td>query_variants</td><td><code>2~3</code></td><td>召回率 +15~20%</td></tr>
+        <tr><td>memory_window</td><td><code>10 轮</code></td><td>短期窗口大小</td></tr>
+        <tr><td>summary_trigger</td><td><code>20 轮</code></td><td>触发摘要压缩</td></tr>
+        <tr><td>llm_max_tokens</td><td><code>2500</code></td><td>报告平均 1800 token</td></tr>
+        <tr><td>llm_temperature</td><td><code>0.0</code></td><td>合规场景要求确定性</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- §9 数据规格 -->
+  <section id="sec-9">
+    <h2><span class="section-num">9</span>数据规格</h2>
+
+    <h3>9.1 知识库目录结构</h3>
+<pre><code>data/raw/
+├── 业务规则/
+│   ├── 公司信贷业务准入标准.md
+│   ├── 信贷产品/对公信贷产品完整手册.md
+│   ├── 票据业务/票据业务操作规范.md
+│   ├── 结构融资/ABS资产证券化操作手册.md
+│   ├── 供应链金融/供应链金融产品体系.md
+│   └── 贸易融资/贸易融资产品手册.md
+├── 内部政策/
+│   ├── 审批制度/信贷审批权限与定价管理.md
+│   └── 风险分类管理办法.md
+├── 监管文件/
+│   └── 银保监会关于加强小微企业信贷的指导意见.md
+└── 法律法规/
+    └── 贷款通则关键条款摘录.md</code></pre>
+    <p>子目录名 = 文档分类（自动归类）</p>
+
+    <h3>9.2 文档元数据 Schema</h3>
+<pre><code>{
+  "doc_id": "doc-20260401-104500-xxxxxxxx",
+  "filename": "公司信贷业务准入标准.md",
+  "category": "业务规则",
+  "type": "regular | temporary",
+  "status": "active | suspended | revoked",
+  "ingested_at": "2025-08-15T10:23:08+08:00",
+  "publisher": {
+    "department": "公司业务部",
+    "name": "李建国"
+  },
+  "review": {
+    "status": "approved | rejected",
+    "reviewer": "陈yy",
+    "reviewed_at": "2025-08-16T14:50:00+08:00"
+  },
+  "effective_from": "2025-09-01",
+  "effective_to": null,
+  "revoked_at": null,
+  "overrides": ["doc-id-of-overridden-file"],
+  "data_classification": "internal",
+  "sha256": "...",
+  "page_count": 12,
+  "chunk_count": 42
+}</code></pre>
+
+    <h3>9.3 命名规范</h3>
+    <ul>
+      <li>文件名格式：<code>{规则名称}（{版本}）.md</code>，如 <code>公司信贷业务准入标准（2025版）.md</code></li>
+      <li>临时文件：<code>{规则名称}（临时{年}年第{N}号）.md</code></li>
+      <li>已废止：保留原文件名，状态字段标记 <code>revoked</code></li>
+    </ul>
+  </section>
+
+  <!-- §10 UI/UX -->
+  <section id="sec-10">
+    <h2><span class="section-num">10</span>UI/UX 规范</h2>
+
+    <h3>10.1 视觉令牌</h3>
+    <table>
+      <thead><tr><th>Token</th><th>值</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td>primary</td><td><code style="background:#1E3A5F;color:#FFF;">#1E3A5F</code></td><td>主色（深银行蓝）</td></tr>
+        <tr><td>accent-gold</td><td><code style="background:#C9A84C;color:#FFF;">#C9A84C</code></td><td>金色强调</td></tr>
+        <tr><td>success</td><td><code style="background:#16A34A;color:#FFF;">#16A34A</code></td><td>通过 / 生效</td></tr>
+        <tr><td>warning</td><td><code style="background:#D97706;color:#FFF;">#D97706</code></td><td>暂停 / 临时</td></tr>
+        <tr><td>danger</td><td><code style="background:#DC2626;color:#FFF;">#DC2626</code></td><td>废止 / 不通过</td></tr>
+        <tr><td>info</td><td><code style="background:#0284C7;color:#FFF;">#0284C7</code></td><td>提示</td></tr>
+        <tr><td>purple</td><td><code style="background:#7C3AED;color:#FFF;">#7C3AED</code></td><td>内部政策</td></tr>
+        <tr><td>字体</td><td>Noto Sans SC + Inter</td><td>中英文混排</td></tr>
+      </tbody>
+    </table>
+
+    <h3>10.2 交互原则</h3>
+    <ol>
+      <li><strong>即点即响</strong>：核心动作 ≤ 1 次点击触发</li>
+      <li><strong>过程可见</strong>：检索 / 推理过程实时动画展示</li>
+      <li><strong>引用可点</strong>：每条引用可点击展开原文（M3 阶段）</li>
+      <li><strong>状态明确</strong>：颜色 + 图标 + 文字 三重提示</li>
+      <li><strong>可逆操作</strong>：所有删除 / 废止可在 30 天内回滚</li>
+    </ol>
+
+    <h3>10.3 关键视觉处理</h3>
+    <ul>
+      <li>被废止文件：文件名 <span style="text-decoration:line-through;color:#DC2626;">red strikethrough</span></li>
+      <li>被暂停文件：删除线 + 黄色背景行 + "暂停使用" pill</li>
+      <li>临时文件：金色边框 + 进度条倒计时</li>
+      <li>生效中：绿色 pill + 文字状态</li>
+    </ul>
+  </section>
+
+  <!-- §11 实施路径 -->
+  <section id="sec-11">
+    <h2><span class="section-num">11</span>实施路径</h2>
+
+    <h3>11.1 6 阶段路线图</h3>
+    <table>
+      <thead><tr><th style="width:60px;">阶段</th><th>目标</th><th style="width:80px;">工期</th><th style="width:120px;">状态</th></tr></thead>
+      <tbody>
+        <tr><td><strong>M1</strong></td><td>基础知识库 + 单轮问答</td><td>4 周</td><td><span class="pill pill-success">✅ 已完成</span></td></tr>
+        <tr><td><strong>M2</strong></td><td>查询改写 + 多查询融合</td><td>2 周</td><td><span class="pill pill-success">✅ 已完成</span></td></tr>
+        <tr><td><strong>M3</strong></td><td>信贷预审场景化</td><td>3 周</td><td><span class="pill pill-success">✅ 已完成</span></td></tr>
+        <tr><td><strong>M4</strong></td><td>多轮对话 + 5 层记忆</td><td>3 周</td><td><span class="pill pill-warning">🚧 进行中</span></td></tr>
+        <tr><td><strong>M5</strong></td><td>权限管控 + 审计日志</td><td>2 周</td><td><span class="pill pill-info">待启动</span></td></tr>
+        <tr><td><strong>M6</strong></td><td>私有化 + 监管沙箱</td><td>4 周</td><td><span class="pill pill-info">待启动</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>11.2 关键里程碑</h3>
+    <ul>
+      <li>🎯 <strong>MVP 上线</strong>：M3 末（已达成）</li>
+      <li>🎯 <strong>多轮对话灰度</strong>：M4 末（2026-Q3）</li>
+      <li>🎯 <strong>权限 + 审计完成</strong>：M5 末（2026-Q3）</li>
+      <li>🎯 <strong>私有化部署投产</strong>：M6 末（2026-Q4）</li>
+    </ul>
+  </section>
+
+  <!-- §12 验收 -->
+  <section id="sec-12">
+    <h2><span class="section-num">12</span>验收标准</h2>
+
+    <h3>12.1 功能验收（按场景）</h3>
+    <table>
+      <thead><tr><th>场景</th><th>验收点</th></tr></thead>
+      <tbody>
+        <tr><td>信贷预审</td><td>3 个标准案例（PASS/CONDITIONAL/REJECT）100% 输出预期结论</td></tr>
+        <tr><td>多轮对话</td><td>完整跑通 8 轮预设剧本，记忆面板状态正确</td></tr>
+        <tr><td>产品比对</td><td>3 类业务诉求触发对应产品池，对比矩阵无空缺</td></tr>
+        <tr><td>知识库日志</td><td>临时文件入库 → 原文件自动暂停 → 到期自动恢复</td></tr>
+      </tbody>
+    </table>
+
+    <h3>12.2 性能验收</h3>
+    <ul>
+      <li>✅ 端到端 P95 ≤ 5 秒</li>
+      <li>✅ 单次检索 P95 ≤ 800 ms</li>
+      <li>✅ 50 QPS 并发无错误</li>
+    </ul>
+
+    <h3>12.3 准确率验收（标注集回归）</h3>
+    <ul>
+      <li>✅ 100 个标注问题，引用召回 ≥ 95%</li>
+      <li>✅ 引用文件名准确 ≥ 90%</li>
+      <li>✅ 结论与人工合规官一致 ≥ 92%</li>
+    </ul>
+  </section>
+
+  <!-- §13 风险 -->
+  <section id="sec-13">
+    <h2><span class="section-num">13</span>风险与依赖</h2>
+
+    <h3>13.1 技术风险</h3>
+    <table>
+      <thead><tr><th>风险</th><th style="width:60px;">等级</th><th>缓解措施</th></tr></thead>
+      <tbody>
+        <tr><td>LLM 幻觉</td><td>🔴 高</td><td>强约束 prompt + 引用强制 + 标注集回归</td></tr>
+        <tr><td>中文 embedding 不准</td><td>🟡 中</td><td>M6 升级 BAAI/bge-large-zh</td></tr>
+        <tr><td>ChromaDB 大规模性能</td><td>🟡 中</td><td>M6 切换 Milvus / Qdrant</td></tr>
+        <tr><td>监管口径变更滞后</td><td>🟢 低</td><td>临时文件机制 + 自动覆盖</td></tr>
+      </tbody>
+    </table>
+
+    <h3>13.2 合规风险</h3>
+    <table>
+      <thead><tr><th>风险</th><th style="width:60px;">等级</th><th>缓解措施</th></tr></thead>
+      <tbody>
+        <tr><td>数据出域</td><td>🔴 高</td><td>M6 私有化部署</td></tr>
+        <tr><td>引用错误导致违规</td><td>🔴 高</td><td>双人复核 + 月度抽查</td></tr>
+        <tr><td>临时文件未及时入库</td><td>🟡 中</td><td>与法务系统对接，自动同步</td></tr>
+        <tr><td>审计追溯不全</td><td>🟡 中</td><td>全程留痕 + 30 天回溯</td></tr>
+      </tbody>
+    </table>
+
+    <h3>13.3 外部依赖</h3>
+    <ul>
+      <li>Anthropic API 可用性（M6 切私有 LLM 后解除）</li>
+      <li>行内 SSO 系统对接</li>
+      <li>法务 / 合规部规则文档供给</li>
+      <li>行内 RBAC 角色体系</li>
+    </ul>
+  </section>
+
+  <!-- §14 附录 -->
+  <section id="sec-14">
+    <h2><span class="section-num">14</span>附录</h2>
+
+    <h3>14.1 术语表</h3>
+    <table>
+      <thead><tr><th>术语</th><th>定义</th></tr></thead>
+      <tbody>
+        <tr><td>RAG</td><td>Retrieval-Augmented Generation 检索增强生成</td></tr>
+        <tr><td>Wiki-RAG</td><td>把文档建模为知识网络的 RAG（本产品形态）</td></tr>
+        <tr><td>RRF</td><td>Reciprocal Rank Fusion 倒数排名融合</td></tr>
+        <tr><td>BM25</td><td>经典关键词检索算法</td></tr>
+        <tr><td>FTS5</td><td>SQLite 全文搜索引擎</td></tr>
+        <tr><td>FTP</td><td>Funds Transfer Pricing 内部资金转移定价</td></tr>
+        <tr><td>LPR</td><td>Loan Prime Rate 贷款基础利率</td></tr>
+        <tr><td>TAT</td><td>Turn-Around Time 周转时间</td></tr>
+        <tr><td>RBAC</td><td>Role-Based Access Control 基于角色的权限控制</td></tr>
+        <tr><td>HNSW</td><td>Hierarchical Navigable Small World 向量索引算法</td></tr>
+      </tbody>
+    </table>
+
+    <h3>14.2 参考资料</h3>
+    <ul>
+      <li>《商业银行公司授信业务尽职调查指引》银监会</li>
+      <li>《银行业金融机构数据治理指引》银保监会</li>
+      <li>《贷款通则》中国人民银行</li>
+      <li>Anthropic Claude API 文档</li>
+      <li>Sentence-Transformers 官方文档</li>
+      <li>ChromaDB 文档</li>
+    </ul>
+
+    <h3>14.3 文档变更记录</h3>
+    <table>
+      <thead><tr><th>版本</th><th>日期</th><th>变更</th><th>作者</th></tr></thead>
+      <tbody>
+        <tr><td>v0.1</td><td>2026-03-15</td><td>初稿，列出三场景</td><td>产品组</td></tr>
+        <tr><td>v0.5</td><td>2026-04-10</td><td>补全 Wiki-RAG 立标对比</td><td>产品组</td></tr>
+        <tr><td>v0.9</td><td>2026-04-25</td><td>补全知识库日志 + 临时文件机制</td><td>陈yy</td></tr>
+        <tr><td><strong>v1.0</strong></td><td><strong>2026-04-29</strong></td><td><strong>最终版，可进入开发</strong></td><td><strong>陈yy</strong></td></tr>
+      </tbody>
+    </table>
+
+    <blockquote>
+      <p><strong>签署</strong></p>
+      <p>产品负责人：陈yy（合规官）</p>
+      <p>技术负责人：————</p>
+      <p>业务负责人：————</p>
+      <p>评审日期：2026-04-29</p>
+    </blockquote>
+  </section>
+
+</main>
+</div>
+
+<script>
+// TOC active highlighting
+const sections=document.querySelectorAll('section[id]');
+const tocLinks=document.querySelectorAll('#toc a');
+const progress=document.getElementById('progress');
+
+function onScroll(){
+  const scrollTop=window.pageYOffset||document.documentElement.scrollTop;
+  const docHeight=document.documentElement.scrollHeight-window.innerHeight;
+  progress.style.width=(scrollTop/docHeight*100)+'%';
+
+  let current='';
+  sections.forEach(sec=>{
+    const top=sec.offsetTop-100;
+    if(scrollTop>=top)current=sec.id;
+  });
+  tocLinks.forEach(a=>{
+    a.classList.toggle('active',a.getAttribute('href')==='#'+current);
+  });
+}
+window.addEventListener('scroll',onScroll);
+onScroll();
+
+// Smooth scroll
+tocLinks.forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const target=document.querySelector(a.getAttribute('href'));
+    if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+</script>
+
+</body>
+</html>
