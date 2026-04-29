@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>银行公司业务智能小助手 · 项目总览</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--primary:#1E3A5F;--gold:#C9A84C;--bg:#F5F7FA;--surface:#FFF;--text:#1A1A2E;--text2:#475569;--border:#E2E8F0;}
+body{font-family:-apple-system,'Noto Sans SC','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
+.hero{background:linear-gradient(135deg,var(--primary) 0%,#152D4A 100%);color:#FFF;padding:60px 24px;text-align:center;}
+.hero .badge{display:inline-block;background:var(--gold);color:var(--primary);font-size:12px;font-weight:700;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
+.hero h1{font-size:32px;font-weight:700;margin-bottom:8px;}
+.hero p{font-size:15px;opacity:0.8;max-width:600px;margin:0 auto;}
+.container{max-width:800px;margin:0 auto;padding:40px 24px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:20px;text-decoration:none;color:inherit;display:block;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(30,58,95,0.12);border-color:var(--gold);}
+.card .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;margin-bottom:10px;}
+.tag-prd{background:#FEF6E0;color:#92750E;}
+.tag-demo{background:#F0FDF4;color:#16A34A;}
+.tag-doc{background:#F0F9FF;color:#0284C7;}
+.card h2{font-size:18px;font-weight:700;margin-bottom:6px;color:var(--primary);}
+.card p{font-size:14px;color:var(--text2);}
+.footer{text-align:center;padding:32px;color:var(--text2);font-size:13px;}
+.footer a{color:var(--primary);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="badge">Wiki-RAG · 公司信贷知识库</span>
+  <h1>银行公司业务智能小助手</h1>
+  <p>Corporate Banking Co-pilot · 结构化知识检索增强生成系统</p>
+</div>
+
+<div class="container">
+
+  <a class="card" href="docs/PRD-银行公司业务智能小助手.html">
+    <span class="tag tag-prd">📄 PRD 文档</span>
+    <h2>产品需求文档（PRD）</h2>
+    <p>完整 14 章节产品规格：产品概述 → 功能架构 → 技术选型 → 实施路径 → 验收标准</p>
+  </a>
+
+  <a class="card" href="demo_web/index.html">
+    <span class="tag tag-demo">🚀 在线演示</span>
+    <h2>交互式 Demo</h2>
+    <p>信贷预审合规助手 · 智能咨询多轮对话 · 产品方案比对 · 知识库管理</p>
+  </a>
+
+  <a class="card" href="https://github.com/Yunnnnnner/bank-corporate-ai-assistant">
+    <span class="tag tag-doc">💻 源代码</span>
+    <h2>GitHub 仓库</h2>
+    <p>完整项目源码：RAG pipeline · FastAPI 服务 · CLI 工具 · 10 份业务知识文档</p>
+  </a>
+
+</div>
+
+<div class="footer">
+  <p>银行公司业务智能小助手 · CB-Copilot · v1.0 · 2026</p>
+</div>
+
+</body>
+</html>
