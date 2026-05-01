@@ -392,18 +392,264 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
 <!-- ============================================================ -->
 <section class="page-section" id="page-architecture">
   <div class="page-header">
-    <div class="page-title">架构总览 <span class="title-sub">技术选型 · 业务流程 · 设计思路 · 记忆机制</span></div>
+    <div class="page-title">系统架构总览 <span class="title-sub">五层架构设计 · 模块职责 · 数据流向 · 能力全景</span></div>
     <div class="page-actions">
-      <button class="btn"><i class="fas fa-download"></i> 导出 PDF</button>
-      <button class="btn btn-filled"><i class="fas fa-rocket"></i> 进入演示</button>
+      <button class="btn"><i class="fas fa-download"></i> 导出架构图</button>
+      <button class="btn btn-filled" onclick="switchPage('prereview')"><i class="fas fa-rocket"></i> 进入演示</button>
     </div>
   </div>
 
-  <!-- HERO -->
-  <div class="hero">
-    <h2>为银行信贷业务构建的 Wiki-RAG 知识中枢</h2>
-    <div class="hero-sub">把分散在 10+ 份内部规则 / 监管文件 / 法律法规中的碎片化知识，融合为可推理、可引用、可审计的合规决策能力。</div>
-    <div class="hero-stats">
+  <!-- 五层架构图 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-layer-group"></i>产品架构图 <span class="card-subtitle">五层架构清晰分层，模块职责明确</span></div>
+      <span class="pill pill-success"><i class="fas fa-check-circle"></i> v1.0 已落地</span>
+    </div>
+    <div class="card-body">
+      <div class="arch-diagram">
+        <!-- 第一层：接入与交互层 -->
+        <div class="arch-layer layer-access">
+          <div class="layer-label"><i class="fas fa-desktop"></i>第一层 · 接入与交互层</div>
+          <div class="layer-modules">
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-window-maximize"></i></div>
+              <div class="mod-name">Web UI</div>
+              <div class="mod-tech">React</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-plug"></i></div>
+              <div class="mod-name">REST API</div>
+              <div class="mod-tech">FastAPI</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-stream"></i></div>
+              <div class="mod-name">SSE 流式</div>
+              <div class="mod-tech">实时推送</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#D97706,#B45309);"><i class="fas fa-terminal"></i></div>
+              <div class="mod-name">CLI 工具</div>
+              <div class="mod-tech">Typer</div>
+            </div>
+          </div>
+        </div>
+        <div class="layer-arrow"><i class="fas fa-arrow-down"></i></div>
+        
+        <!-- 第二层：业务场景层 -->
+        <div class="arch-layer layer-scenario">
+          <div class="layer-label"><i class="fas fa-briefcase"></i>第二层 · 业务场景层</div>
+          <div class="layer-modules">
+            <div class="arch-module mod-highlight">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#DC2626,#B91C1C);"><i class="fas fa-file-signature"></i></div>
+              <div class="mod-name">信贷预审合规助手</div>
+              <div class="mod-tech">P0 核心 · 8维并行检索</div>
+            </div>
+            <div class="arch-module mod-highlight">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-comments"></i></div>
+              <div class="mod-name">智能咨询多轮对话</div>
+              <div class="mod-tech">P0 核心 · 5层记忆</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-balance-scale"></i></div>
+              <div class="mod-name">产品方案智能比对</div>
+              <div class="mod-tech">P1 扩展 · 多候选检索</div>
+            </div>
+          </div>
+        </div>
+        <div class="layer-arrow"><i class="fas fa-arrow-down"></i></div>
+        
+        <!-- 第三层：智能引擎层 -->
+        <div class="arch-layer layer-engine">
+          <div class="layer-label"><i class="fas fa-cogs"></i>第三层 · 智能引擎层</div>
+          <div class="layer-modules">
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);"><i class="fas fa-magic"></i></div>
+              <div class="mod-name">Query Rewriter</div>
+              <div class="mod-tech">查询改写 · 2变体</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-search-plus"></i></div>
+              <div class="mod-name">Hybrid Retriever</div>
+              <div class="mod-tech">混合检索 · RRF</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#D97706,#B45309);"><i class="fas fa-brain"></i></div>
+              <div class="mod-name">Memory Manager</div>
+              <div class="mod-tech">5层记忆机制</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-robot"></i></div>
+              <div class="mod-name">Claude LLM</div>
+              <div class="mod-tech">Sonnet 4.6 · 流式</div>
+            </div>
+          </div>
+        </div>
+        <div class="layer-arrow"><i class="fas fa-arrow-down"></i></div>
+        
+        <!-- 第四层：知识管理层 -->
+        <div class="arch-layer layer-knowledge">
+          <div class="layer-label"><i class="fas fa-book"></i>第四层 · 知识管理层 <span class="layer-tag">Wiki-RAG 引擎</span></div>
+          <div class="layer-modules">
+            <div class="arch-module mod-lg">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#DC2626,#B91C1C);"><i class="fas fa-industry"></i></div>
+              <div class="mod-name">文档摄入流水线</div>
+              <div class="mod-tech">6步工序 · 5格式支持</div>
+            </div>
+            <div class="arch-module mod-lg">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-cut"></i></div>
+              <div class="mod-name">语义分块引擎</div>
+              <div class="mod-tech">5种策略 · 句界对齐</div>
+            </div>
+            <div class="arch-module mod-lg">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-database"></i></div>
+              <div class="mod-name">元数据管理 MetaStore</div>
+              <div class="mod-tech">SQLite · doc_id/sha256</div>
+            </div>
+            <div class="arch-module mod-lg">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-code-branch"></i></div>
+              <div class="mod-name">版本控制</div>
+              <div class="mod-tech">状态机 · 变更追踪</div>
+            </div>
+          </div>
+        </div>
+        <div class="layer-arrow"><i class="fas fa-arrow-down"></i></div>
+        
+        <!-- 第五层：基础设施层 -->
+        <div class="arch-layer layer-infra">
+          <div class="layer-label"><i class="fas fa-server"></i>第五层 · 基础设施层</div>
+          <div class="layer-modules">
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-vector-square"></i></div>
+              <div class="mod-name">ChromaDB</div>
+              <div class="mod-tech">向量存储 · HNSW</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-key"></i></div>
+              <div class="mod-name">SQLite FTS5</div>
+              <div class="mod-tech">关键词 · BM25</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#D97706,#B45309);"><i class="fas fa-compress"></i></div>
+              <div class="mod-name">MiniLM</div>
+              <div class="mod-tech">384维嵌入 · batch32</div>
+            </div>
+            <div class="arch-module">
+              <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-cloud"></i></div>
+              <div class="mod-name">Claude API</div>
+              <div class="mod-tech">LLM推理 · 流式</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <style>
+        .arch-diagram { padding: 20px; background: linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%); border-radius: 8px; }
+        .arch-layer { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 8px; }
+        .arch-layer:last-child { margin-bottom: 0; }
+        .layer-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .layer-label i { color: var(--primary); }
+        .layer-tag { margin-left: auto; background: linear-gradient(135deg, var(--accent-gold), #B8973F); color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 10px; text-transform: none; }
+        .layer-modules { display: flex; gap: 12px; flex-wrap: wrap; }
+        .arch-module { flex: 1; min-width: 140px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; transition: all 0.2s; }
+        .arch-module:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .arch-module.mod-lg { min-width: 180px; }
+        .arch-module.mod-highlight { border-color: var(--accent-gold); background: linear-gradient(180deg, var(--surface-2) 0%, #FEF6E0 100%); }
+        .mod-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; margin: 0 auto 10px; }
+        .mod-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .mod-tech { font-size: 11px; color: var(--text-secondary); }
+        .layer-arrow { text-align: center; color: var(--text-muted); font-size: 14px; margin: 4px 0; opacity: 0.6; }
+      </style>
+    </div>
+  </div>
+
+  <!-- 核心能力矩阵 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-th-list"></i>核心能力矩阵 <span class="card-subtitle">各层关键能力与技术实现对照</span></div>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table class="param-table" style="margin:0;">
+        <thead><tr><th style="width:70px;">层级</th><th style="width:110px;">核心模块</th><th>关键能力</th><th style="width:130px;">技术实现</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2"><strong class="text-info">接入层</strong></td><td>Web 界面</td><td>三场景导航、预审表单、对话界面、比对矩阵</td><td>React + TypeScript</td></tr>
+          <tr><td>API 网关</td><td>统一鉴权、流式响应、CORS</td><td>FastAPI + uvicorn</td></tr>
+          <tr><td rowspan="3"><strong class="text-danger">场景层</strong></td><td>信贷预审</td><td>8 维并行检索、结构化报告、Verdict 判定</td><td>Prompt 模板 + 并行检索</td></tr>
+          <tr><td>多轮对话</td><td>指代消解、上下文延续、实体追踪</td><td>5 层记忆机制</td></tr>
+          <tr><td>产品比对</td><td>诉求解析、产品池匹配、8 维对比</td><td>信号提取 + 多候选检索</td></tr>
+          <tr><td rowspan="4"><strong class="text-warning">引擎层</strong></td><td>查询改写</td><td>生成 2 个语义变体、扩大召回</td><td>Few-shot Prompt</td></tr>
+          <tr><td>混合检索</td><td>向量(0.6) + 关键词(0.4) + RRF 融合</td><td>ChromaDB + FTS5</td></tr>
+          <tr><td>记忆管理</td><td>短期窗口/长期摘要/实体追踪/引用记忆/偏好</td><td>滑动窗口 + NER + KV</td></tr>
+          <tr><td>LLM 生成</td><td>强约束 Prompt、流式输出、引用强制</td><td>Claude Sonnet 4.6</td></tr>
+          <tr><td rowspan="3"><strong class="text-success">知识层</strong></td><td>摄入流水线</td><td>6 步处理：扫描→解析→清洗→分块→嵌入→存储</td><td>python-docx/pdfplumber</td></tr>
+          <tr><td>元数据管理</td><td>doc_id、sha256、版本、状态、分类标签</td><td>SQLite MetaStore</td></tr>
+          <tr><td>版本控制</td><td>变更日志、自动暂停/恢复、废止标记</td><td>时间戳 + 状态机</td></tr>
+          <tr><td rowspan="3"><strong class="text-purple">基础层</strong></td><td>向量数据库</td><td>HNSW 索引、cosine 相似度、top-k 召回</td><td>ChromaDB</td></tr>
+          <tr><td>关键词检索</td><td>BM25 评分、jieba 分词、中文优化</td><td>SQLite FTS5</td></tr>
+          <tr><td>嵌入模型</td><td>384 维、批处理 32、归一化</td><td>MiniLM-L12-v2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 数据流向总览 -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-exchange-alt"></i>数据流向总览 <span class="card-subtitle">离线摄入与在线检索的数据流转</span></div>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:start;">
+        <!-- 离线摄入 -->
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--info);margin-bottom:12px;"><i class="fas fa-cloud-upload-alt"></i> 离线摄入</div>
+          <div style="background:var(--surface-2);border-radius:8px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;color:var(--text-secondary);">
+            <div style="color:var(--text-primary);">原始文档</div>
+            <div style="color:var(--info);">↓ DocumentLoader</div>
+            <div style="color:var(--text-primary);">SHA256 去重 → 元数据注册</div>
+            <div style="color:var(--info);">↓ DocumentParser</div>
+            <div style="color:var(--text-primary);">raw_text + 表格抽取</div>
+            <div style="color:var(--info);">↓ DataCleaner</div>
+            <div style="color:var(--text-primary);">clean_text (去噪归一)</div>
+            <div style="color:var(--info);">↓ TextChunker</div>
+            <div style="color:var(--text-primary);">chunks (500字/块)</div>
+            <div style="color:var(--info);">↓ Embedder</div>
+            <div style="color:var(--text-primary);">384维向量</div>
+            <div style="color:var(--info);">↓ VectorStore</div>
+            <div style="color:var(--success);font-weight:600;">ChromaDB + FTS5 存储</div>
+          </div>
+        </div>
+        
+        <!-- 中间连接 -->
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding-top:40px;">
+          <div style="width:40px;height:40px;background:linear-gradient(135deg,var(--accent-gold),#B8973F);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;"><i class="fas fa-database"></i></div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;">知识库<br>存储层</div>
+        </div>
+        
+        <!-- 在线检索 -->
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:12px;"><i class="fas fa-search"></i> 在线检索</div>
+          <div style="background:var(--surface-2);border-radius:8px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;color:var(--text-secondary);">
+            <div style="color:var(--text-primary);">用户查询</div>
+            <div style="color:var(--success);">↓ QueryRewriter</div>
+            <div style="color:var(--text-primary);">2-3 条检索变体</div>
+            <div style="color:var(--success);">↓ HybridRetriever</div>
+            <div style="color:var(--text-primary);">语义×0.6 + 关键词×0.4</div>
+            <div style="color:var(--success);">↓ RRF 融合排序</div>
+            <div style="color:var(--text-primary);">top-k 命中结果</div>
+            <div style="color:var(--success);">↓ MemoryManager</div>
+            <div style="color:var(--text-primary);">+ 上下文记忆</div>
+            <div style="color:var(--success);">↓ Claude LLM</div>
+            <div style="color:var(--text-primary);">流式生成报告</div>
+            <div style="color:var(--success);">↓ CitationRenderer</div>
+            <div style="color:var(--success);font-weight:600;">结构化报告 + 引用</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 关键指标 -->
+  <div class="hero" style="margin-bottom:24px;">
+    <div class="hero-stats" style="margin-top:0;">
       <div class="hero-stat"><div class="label">规则文档</div><div class="value">25 份</div><div class="desc">业务/政策/监管/法规 4 大类</div></div>
       <div class="hero-stat"><div class="label">向量片段</div><div class="value">962 块</div><div class="desc">语义感知分块 · 平均 480 字</div></div>
       <div class="hero-stat"><div class="label">检索维度</div><div class="value">8 维</div><div class="desc">单笔预审并行召回</div></div>
