@@ -484,10 +484,26 @@ section table td:first-child{font-weight:600;color:var(--text-primary);}
     </ul>
 
     <h4>6.4.2 摄入流水线</h4>
+
+    <h4>6 步工序（可视化流程）</h4>
+    <table>
+      <thead><tr><th style="width:60px;">步骤</th><th style="width:120px;">模块</th><th>技术实现</th><th>输出</th></tr></thead>
+      <tbody>
+        <tr><td><strong>①</strong></td><td>扫描加载</td><td><code>DocumentLoader</code> 扫描 <code>data/raw/</code> 目录，识别 5 种格式</td><td>文件列表 + SHA256</td></tr>
+        <tr><td><strong>②</strong></td><td>格式解析</td><td>pdfplumber / python-docx / pandas 抽取文本+表格</td><td>原始文本 + 结构化数据</td></tr>
+        <tr><td><strong>③</strong></td><td>数据清洗</td><td><code>DataCleaner</code> 正则去噪、归一化、去页眉页脚</td><td>清洗后文本</td></tr>
+        <tr><td><strong>④</strong></td><td>语义分块</td><td><code>TextChunker</code> 按"第X条/第X章"切分，滑窗 fallback</td><td>500字符/块，80字符重叠</td></tr>
+        <tr><td><strong>⑤</strong></td><td>向量化</td><td>sentence-transformers MiniLM-L12-v2</td><td>384维向量，batch=32</td></tr>
+        <tr><td><strong>⑥</strong></td><td>双库存储</td><td><code>MetaStore</code> + <code>VectorStore</code> → ChromaDB(向量) + SQLite FTS5(关键词)</td><td>双重索引持久化</td></tr>
+      </tbody>
+    </table>
+
+    <h4>功能特性</h4>
     <ul>
-      <li>6 步处理：扫描加载 → 格式解析 → 数据清洗 → 语义分块 → 向量化 → 双库存储</li>
       <li>支持格式：PDF / DOCX / MD / XLSX / CSV</li>
-      <li>增量摄入：SHA256 去重，已索引的文档自动跳过</li>
+      <li>增量摄入：SHA256 去重，已索引文档自动跳过</li>
+      <li>错误处理：解析失败/空文档标记 <span class="pill pill-danger">error</span> 状态，不阻塞其他文档</li>
+      <li><strong>可视化演示</strong>：Web 界面提供「模拟摄入」按钮，逐文档动画展示 6 步处理过程，实时更新统计面板</li>
     </ul>
 
     <hr>
