@@ -414,17 +414,20 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
             <div class="arch-module mod-highlight" style="min-width:180px;">
               <div class="mod-icon" style="background:linear-gradient(135deg,#DC2626,#B91C1C);"><i class="fas fa-file-signature"></i></div>
               <div class="mod-name">信贷预审合规助手</div>
-              <div class="mod-tech">P0 · 表单录入 → 8维检索 → 结构化报告</div>
+              <div class="mod-tech">8维并行检索 · 结构化报告 · 引用溯源</div>
+              <div class="mod-capability"><i class="fas fa-cogs"></i>Prompt模板 + 8段式报告</div>
             </div>
             <div class="arch-module mod-highlight" style="min-width:180px;">
               <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-comments"></i></div>
               <div class="mod-name">智能咨询多轮对话</div>
-              <div class="mod-tech">P0 · 连续提问 → 指代消解 → 实体追踪</div>
+              <div class="mod-tech">指代消解 · 上下文延续 · 实体追踪</div>
+              <div class="mod-capability"><i class="fas fa-cogs"></i>5层记忆 · 滑动窗口+NER</div>
             </div>
             <div class="arch-module" style="min-width:180px;">
               <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-balance-scale"></i></div>
               <div class="mod-name">产品方案智能比对</div>
-              <div class="mod-tech">P1 · 诉求解析 → 产品池匹配 → 差异分析</div>
+              <div class="mod-tech">诉求解析 · 产品池匹配 · 8维对比</div>
+              <div class="mod-capability"><i class="fas fa-cogs"></i>信号提取 + 多候选检索</div>
             </div>
           </div>
         </div>
@@ -437,22 +440,26 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-window-maximize"></i></div>
               <div class="mod-name">Web UI</div>
-              <div class="mod-tech">React · 三场景导航</div>
+              <div class="mod-tech">三场景导航 · 预审表单 · 对话界面</div>
+              <div class="mod-capability"><i class="fas fa-code"></i>React + TypeScript</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-plug"></i></div>
               <div class="mod-name">REST API</div>
-              <div class="mod-tech">FastAPI · 统一鉴权</div>
+              <div class="mod-tech">统一鉴权 · 异步处理 · 流式响应</div>
+              <div class="mod-capability"><i class="fas fa-code"></i>FastAPI + uvicorn</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-stream"></i></div>
               <div class="mod-name">SSE 流式</div>
-              <div class="mod-tech">实时推送 · 流式渲染</div>
+              <div class="mod-tech">实时推送 · 流式渲染 · CORS配置</div>
+              <div class="mod-capability"><i class="fas fa-code"></i>Server-Sent Events</div>
             </div>
             <div class="arch-module mod-lg" style="border-color:var(--accent-gold);background:linear-gradient(180deg,var(--surface-2) 0%,#FEF6E0 100%);">
               <div class="mod-icon" style="background:linear-gradient(135deg,#D97706,#B45309);"><i class="fas fa-book"></i></div>
               <div class="mod-name">Wiki-RAG 知识网络引擎</div>
-              <div class="mod-tech">6步摄入 · 语义分块 · 元数据 · 版本控制</div>
+              <div class="mod-tech">6步摄入流水线 · 语义分块 · 版本控制</div>
+              <div class="mod-capability"><i class="fas fa-code"></i>python-docx/pdfplumber + SQLite</div>
             </div>
           </div>
         </div>
@@ -465,22 +472,26 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);"><i class="fas fa-magic"></i></div>
               <div class="mod-name">Query Rewriter</div>
-              <div class="mod-tech">查询改写 · 2-3变体</div>
+              <div class="mod-tech">生成2-3语义变体 · 扩大召回</div>
+              <div class="mod-capability"><i class="fas fa-brain"></i>Few-shot Prompt + Claude</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-search-plus"></i></div>
               <div class="mod-name">Hybrid Retriever</div>
-              <div class="mod-tech">混合检索 · RRF融合</div>
+              <div class="mod-tech">向量×0.6 + 关键词×0.4 + RRF</div>
+              <div class="mod-capability"><i class="fas fa-brain"></i>ChromaDB + SQLite FTS5</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#D97706,#B45309);"><i class="fas fa-memory"></i></div>
               <div class="mod-name">Memory Manager</div>
-              <div class="mod-tech">5层记忆 · 实体追踪</div>
+              <div class="mod-tech">短期窗口 · 长期摘要 · 引用记忆</div>
+              <div class="mod-capability"><i class="fas fa-brain"></i>滑动窗口+LLM摘要+NER</div>
             </div>
             <div class="arch-module" style="border-color:#7C3AED;background:linear-gradient(180deg,var(--surface-2) 0%,#EDE9FE 100%);">
               <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-robot"></i></div>
               <div class="mod-name">Claude LLM</div>
-              <div class="mod-tech">Sonnet 4.6 · 强约束Prompt</div>
+              <div class="mod-tech">强约束Prompt · 流式输出 · 引用强制</div>
+              <div class="mod-capability"><i class="fas fa-brain"></i>Claude Sonnet 4.6</div>
             </div>
           </div>
         </div>
@@ -493,22 +504,26 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i class="fas fa-vector-square"></i></div>
               <div class="mod-name">ChromaDB</div>
-              <div class="mod-tech">向量数据库 · HNSW</div>
+              <div class="mod-tech">HNSW索引 · cosine相似度 · top-k</div>
+              <div class="mod-capability"><i class="fas fa-database"></i>chromadb</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#0284C7,#0369A1);"><i class="fas fa-key"></i></div>
               <div class="mod-name">SQLite FTS5</div>
-              <div class="mod-tech">全文检索 · BM25</div>
+              <div class="mod-tech">BM25评分 · jieba分词 · 中文优化</div>
+              <div class="mod-capability"><i class="fas fa-database"></i>sqlite3 + jieba</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#D97706,#B45309);"><i class="fas fa-compress"></i></div>
               <div class="mod-name">MiniLM</div>
-              <div class="mod-tech">嵌入模型 · 384维</div>
+              <div class="mod-tech">384维嵌入 · batch32 · L2归一化</div>
+              <div class="mod-capability"><i class="fas fa-database"></i>sentence-transformers</div>
             </div>
             <div class="arch-module">
               <div class="mod-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i class="fas fa-cloud"></i></div>
               <div class="mod-name">Claude API</div>
-              <div class="mod-tech">大语言模型 · 流式</div>
+              <div class="mod-tech">LLM推理 · 流式生成 · 函数调用</div>
+              <div class="mod-capability"><i class="fas fa-database"></i>Anthropic API</div>
             </div>
           </div>
         </div>
@@ -527,38 +542,11 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
         .arch-module.mod-highlight { border-color: var(--accent-gold); }
         .mod-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; margin: 0 auto 10px; }
         .mod-name { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-        .mod-tech { font-size: 11px; color: var(--text-secondary); }
+        .mod-tech { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+        .mod-capability { font-size: 10px; color: var(--text-muted); background: var(--surface); padding: 4px 8px; border-radius: 4px; margin-top: 4px; }
+        .mod-capability i { margin-right: 4px; color: var(--primary); }
         .layer-arrow { text-align: center; color: var(--text-muted); font-size: 14px; margin: 4px 0; opacity: 0.6; }
       </style>
-    </div>
-  </div>
-
-  <!-- 核心能力矩阵 -->
-  <div class="card mb-16">
-    <div class="card-header">
-      <div class="card-title"><i class="fas fa-th-list"></i>核心能力矩阵 <span class="card-subtitle">各层关键能力与技术实现对照</span></div>
-    </div>
-    <div class="card-body" style="padding:0;">
-      <table class="param-table" style="margin:0;">
-        <thead><tr><th style="width:70px;">层级</th><th style="width:130px;">核心模块</th><th>关键能力</th><th style="width:140px;">技术实现</th></tr></thead>
-        <tbody>
-          <tr><td rowspan="3"><strong style="color:#DC2626;">用户层</strong></td><td>信贷预审合规助手</td><td>8 维并行检索、结构化报告、Verdict 判定、引用溯源</td><td>Prompt 模板 + 8段式报告</td></tr>
-          <tr><td>智能咨询多轮对话</td><td>指代消解、上下文延续、实体追踪、5层记忆</td><td>滑动窗口 + NER + KV</td></tr>
-          <tr><td>产品方案智能比对</td><td>诉求解析、产品池匹配、8 维差异对比</td><td>信号提取 + 多候选检索</td></tr>
-          <tr><td rowspan="4"><strong style="color:#0284C7;">技术层</strong></td><td>Web UI</td><td>三场景导航、预审表单、对话界面、比对矩阵</td><td>React + TypeScript</td></tr>
-          <tr><td>REST API</td><td>统一鉴权、异步处理、流式响应、CORS</td><td>FastAPI + uvicorn</td></tr>
-          <tr><td>SSE 流式</td><td>实时推送、流式渲染</td><td>Server-Sent Events</td></tr>
-          <tr><td>Wiki-RAG 引擎</td><td>6步摄入流水线、语义分块、元数据管理、版本控制</td><td>python-docx/pdfplumber + SQLite</td></tr>
-          <tr><td rowspan="4"><strong style="color:#D97706;">模型层</strong></td><td>Query Rewriter</td><td>生成 2-3 个语义变体、扩大召回</td><td>Few-shot Prompt + Claude</td></tr>
-          <tr><td>Hybrid Retriever</td><td>向量(0.6) + 关键词(0.4) + RRF 融合排序</td><td>ChromaDB + SQLite FTS5</td></tr>
-          <tr><td>Memory Manager</td><td>短期窗口/长期摘要/实体追踪/引用记忆/偏好</td><td>滑动窗口 + LLM摘要 + NER</td></tr>
-          <tr><td>Claude LLM</td><td>强约束 Prompt、流式输出、引用强制、结构化生成</td><td>Claude Sonnet 4.6</td></tr>
-          <tr><td rowspan="4"><strong style="color:#16A34A;">基础层</strong></td><td>ChromaDB</td><td>HNSW 索引、cosine 相似度、top-k 召回、持久化</td><td>chromadb</td></tr>
-          <tr><td>SQLite FTS5</td><td>BM25 评分、jieba 分词、中文优化、轻量级</td><td>sqlite3 + jieba</td></tr>
-          <tr><td>MiniLM</td><td>384 维向量嵌入、批处理 32、L2 归一化</td><td>sentence-transformers</td></tr>
-          <tr><td>Claude API</td><td>LLM 推理、流式生成、函数调用</td><td>Anthropic API</td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 
