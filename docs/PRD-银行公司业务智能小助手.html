@@ -567,6 +567,110 @@ section table td:first-child{font-weight:600;color:var(--text-primary);}
       <li>已废止文件：红背景 + 删除线 + 半透明</li>
       <li>底部变更日志：按时间倒序，含预定的自动化操作</li>
     </ul>
+
+    <hr>
+
+    <h3>6.6 系统架构总览（P0）</h3>
+
+    <h4>6.6.1 产品架构图（五层架构）</h4>
+    <div style="background:var(--surface-2);border-radius:var(--radius);padding:20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;overflow-x:auto;">
+<pre style="margin:0;color:var(--text-primary);">┌─────────────────────────────────────────────────────────────────────────┐
+│                        【第一层】接入与交互层                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Web UI     │  │  REST API    │  │   SSE 流式   │  │    CLI 工具   │  │
+│  │  (React)     │  │  (FastAPI)   │  │  (实时推送)   │  │   (Typer)    │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                        【第二层】业务场景层                               │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐              │
+│  │  信贷预审合规助手 │  │  智能咨询多轮对话 │  │  产品方案智能比对 │              │
+│  │    (P0 核心)    │  │    (P0 核心)    │  │    (P1 扩展)    │              │
+│  └────────────────┘  └────────────────┘  └────────────────┘              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                        【第三层】智能引擎层                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ Query Rewriter│  │Hybrid Retriever│  │Memory Manager│  │ Claude LLM  │  │
+│  │  查询改写(2变) │  │ 混合检索(RRF)  │  │  5层记忆机制  │  │ 流式生成报告  │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                        【第四层】知识管理层                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐│
+│  │                        Wiki-RAG 知识网络引擎                         ││
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────┐ ││
+│  │  │  文档摄入流水线 │  │  语义分块引擎  │  │  元数据管理系统 │  │版本控制  │ ││
+│  │  │   (6步工序)   │  │ (5种正则策略) │  │  (MetaStore)  │  │(变更追踪)│ ││
+│  │  └──────────────┘  └──────────────┘  └──────────────┘  └──────────┘ ││
+│  └─────────────────────────────────────────────────────────────────────┘│
+├─────────────────────────────────────────────────────────────────────────┤
+│                        【第五层】基础设施层                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │  ChromaDB    │  │ SQLite FTS5  │  │   MiniLM     │  │   Claude API  │  │
+│  │  (向量存储)   │  │ (关键词检索)  │  │  (384维嵌入)  │  │  (LLM推理)   │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘</pre>
+    </div>
+
+    <h4>6.6.2 核心能力矩阵</h4>
+    <table>
+      <thead><tr><th style="width:80px;">架构层级</th><th style="width:120px;">核心模块</th><th>关键能力</th><th style="width:150px;">技术实现</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2"><strong>接入层</strong></td><td>Web 界面</td><td>三场景导航、预审表单、对话界面、比对矩阵</td><td>React + TypeScript</td></tr>
+        <tr><td>API 网关</td><td>统一鉴权、流式响应、CORS</td><td>FastAPI + uvicorn</td></tr>
+        <tr><td rowspan="3"><strong>场景层</strong></td><td>信贷预审</td><td>8 维并行检索、结构化报告、Verdict 判定</td><td>Prompt 模板 + 并行检索</td></tr>
+        <tr><td>多轮对话</td><td>指代消解、上下文延续、实体追踪</td><td>5 层记忆机制</td></tr>
+        <tr><td>产品比对</td><td>诉求解析、产品池匹配、8 维对比</td><td>信号提取 + 多候选检索</td></tr>
+        <tr><td rowspan="4"><strong>引擎层</strong></td><td>查询改写</td><td>生成 2 个语义变体、扩大召回</td><td>Few-shot Prompt</td></tr>
+        <tr><td>混合检索</td><td>向量(0.6) + 关键词(0.4) + RRF 融合</td><td>ChromaDB + FTS5</td></tr>
+        <tr><td>记忆管理</td><td>短期窗口/长期摘要/实体追踪/引用记忆/偏好</td><td>滑动窗口 + NER + KV</td></tr>
+        <tr><td>LLM 生成</td><td>强约束 Prompt、流式输出、引用强制</td><td>Claude Sonnet 4.6</td></tr>
+        <tr><td rowspan="3"><strong>知识层</strong></td><td>摄入流水线</td><td>6 步处理：扫描→解析→清洗→分块→嵌入→存储</td><td>见 §6.4.2</td></tr>
+        <tr><td>元数据管理</td><td>doc_id、sha256、版本、状态、分类标签</td><td>SQLite MetaStore</td></tr>
+        <tr><td>版本控制</td><td>变更日志、自动暂停/恢复、废止标记</td><td>时间戳 + 状态机</td></tr>
+        <tr><td rowspan="3"><strong>基础层</strong></td><td>向量数据库</td><td>HNSW 索引、cosine 相似度、top-k 召回</td><td>ChromaDB</td></tr>
+        <tr><td>关键词检索</td><td>BM25 评分、jieba 分词、中文优化</td><td>SQLite FTS5</td></tr>
+        <tr><td>嵌入模型</td><td>384 维、批处理 32、归一化</td><td>sentence-transformers</td></tr>
+      </tbody>
+    </table>
+
+    <h4>6.6.3 数据流向总览</h4>
+    <div style="background:var(--surface-2);border-radius:var(--radius);padding:20px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;overflow-x:auto;">
+<pre style="margin:0;color:var(--text-primary);">【离线摄入】                    【在线检索】
+原始文档 ──→ DocumentLoader ──→ 元数据注册
+    │                              │
+    ▼                              ▼
+DocumentParser ──→ raw_text ──→ QueryRewriter
+    │                              │
+    ▼                              ▼
+DataCleaner ──→ clean_text ──→ HybridRetriever
+    │                              │
+    ▼                              ▼
+TextChunker ──→ chunks ──→ 向量/关键词索引 ──→ RRF 融合排序
+    │                              │
+    ▼                              ▼
+Embedder ──→ vectors ──→ ChromaDB ──→ top-k 命中 ──→ MemoryManager
+    │                              │
+    ▼                              ▼
+VectorStore ──→ 存储 ──→ Claude LLM ──→ 报告生成 + 引用渲染</pre>
+    </div>
+
+    <h4>6.6.4 关键技术选型（9 核心组件）</h4>
+    <p>详见 <a href="#sec-8">§8.1 技术选型</a>。</p>
+
+    <h4>6.6.5 核心设计创新（4 项）</h4>
+    <p>详见 <a href="#sec-4">§4 产品定位</a> 和 <a href="#sec-8">§8.4 核心设计创新</a>。</p>
+
+    <h4>6.6.6 系统能力全景</h4>
+    <table>
+      <thead><tr><th style="width:100px;">能力维度</th><th>具体表现</th><th style="width:150px;">量化指标</th></tr></thead>
+      <tbody>
+        <tr><td><strong>检索能力</strong></td><td>语义+关键词混合检索、RRF 融合、多查询并行</td><td>召回率 ≥95%</td></tr>
+        <tr><td><strong>生成能力</strong></td><td>强引用约束、流式输出、8 段式报告</td><td>准确率 ≥90%</td></tr>
+        <tr><td><strong>记忆能力</strong></td><td>5 层记忆、实体追踪、偏好学习</td><td>上下文窗口 10-20 轮</td></tr>
+        <tr><td><strong>知识管理</strong></td><td>6 步摄入、版本控制、元数据管理</td><td>支持 5 种格式</td></tr>
+        <tr><td><strong>合规能力</strong></td><td>引用溯源、审计日志、权限管控</td><td>100% 可追溯</td></tr>
+        <tr><td><strong>扩展能力</strong></td><td>模块化设计、API 优先、场景可插拔</td><td>新场景 2-3 周上线</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <!-- §7 非功能需求 -->
