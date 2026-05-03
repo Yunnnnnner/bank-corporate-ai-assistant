@@ -113,9 +113,10 @@ class CreditKnowledgePipeline:
         category: Optional[str]    = None,
         top_k: int                 = TOP_K,
         chat_history: Optional[list] = None,
+        user_profile: Optional[dict] = None,
     ) -> RAGResponse:
         contexts = self._smart_retrieve(question, category=category, top_k=top_k)
-        return self.generator.generate(question, contexts, chat_history)
+        return self.generator.generate(question, contexts, chat_history, user_profile)
 
     def ask_stream(
         self,
@@ -123,10 +124,11 @@ class CreditKnowledgePipeline:
         category: Optional[str] = None,
         top_k: int = TOP_K,
         chat_history: Optional[list] = None,
+        user_profile: Optional[dict] = None,
     ):
         """流式问答，返回 (contexts, token_generator)"""
         contexts = self._smart_retrieve(question, category=category, top_k=top_k)
-        return contexts, self.generator.stream_generate(question, contexts, chat_history)
+        return contexts, self.generator.stream_generate(question, contexts, chat_history, user_profile)
 
     def retrieve_only(
         self,

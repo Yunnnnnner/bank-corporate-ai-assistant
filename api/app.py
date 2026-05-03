@@ -46,6 +46,7 @@ class AskRequest(BaseModel):
     top_k:       int           = TOP_K
     stream:      bool          = False
     chat_history: Optional[List[dict]] = None
+    user_profile: Optional[dict] = None  # 个性化：role/verbosity/citation_style/user
 
 class AskResponse(BaseModel):
     answer:  str
@@ -105,8 +106,13 @@ async def ingest_file(
 def ask(req: AskRequest):
     """问答接口（非流式）"""
     pl   = get_pl()
-    resp = pl.ask(req.question, category=req.category,
-                  top_k=req.top_k, chat_history=req.chat_history)
+    resp = pl.ask(
+        req.question,
+        category=req.category,
+        top_k=req.top_k,
+        chat_history=req.chat_history,
+        user_profile=req.user_profile,
+    )
     return AskResponse(
         answer  = resp.answer,
         sources = resp.sources,
@@ -125,6 +131,7 @@ def ask_stream(req: AskRequest):
         category=req.category,
         top_k=req.top_k,
         chat_history=req.chat_history,
+        user_profile=req.user_profile,
     )
 
     def event_stream():
