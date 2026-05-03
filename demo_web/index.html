@@ -375,7 +375,7 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
   <div class="sidebar-section-label">运营</div>
   <ul class="sidebar-menu">
     <li><a data-page="kblog"><span class="menu-icon"><i class="fas fa-clipboard-list"></i></span>RAG 知识库日志</a></li>
-    <li><a><span class="menu-icon"><i class="fas fa-cog"></i></span>系统设置</a></li>
+    <li><a data-page="settings"><span class="menu-icon"><i class="fas fa-cog"></i></span>系统设置</a></li>
   </ul>
   <div class="sidebar-divider"></div>
   <div class="sidebar-section-label">系统</div>
@@ -1632,109 +1632,16 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
     </div>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- 调优视图（仅运维 / 调优可见，不展示给最终用户）              -->
-  <!-- ============================================================ -->
-  <div class="card mb-16" style="border:1px dashed var(--warning);background:linear-gradient(135deg,#FFFBEB 0%,#FFF 60%);">
-    <div class="card-header" style="background:transparent;border-bottom:1px dashed #FDE68A;">
-      <div class="card-title">
-        <i class="fas fa-tools" style="color:var(--warning);"></i>
-        <span style="color:var(--warning);">调优视图（Debug / Tuning）</span>
-        <span class="card-subtitle">仅运维 & 算法工程师可见 · 用于多轮对话效果调优</span>
+  <!-- 调优视图已迁移至 §系统设置（仅运维可见），保留指引链接 -->
+  <div class="card mb-16" style="border:1px dashed var(--border);background:var(--surface-2);">
+    <div class="card-body" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:12.5px;color:var(--text-secondary);">
+        <i class="fas fa-tools text-muted"></i>
+        <strong>调优视图</strong>（记忆机制实时状态 + 查询改写过程透视）已迁移至 <strong>系统设置</strong> 页，仅运维 / 算法工程师使用。
       </div>
-      <span class="pill pill-warning"><i class="fas fa-eye-slash"></i> 不展示给业务用户</span>
-    </div>
-    <div class="card-body" style="padding:12px;">
-      <div class="two-col" style="grid-template-columns:340px 1fr;gap:12px;">
-        <!-- 记忆机制实时状态（从对话页迁移） -->
-        <div class="card" style="margin:0;">
-          <div class="card-header">
-            <div class="card-title"><i class="fas fa-brain"></i>记忆机制实时状态</div>
-            <span class="pill pill-success">v2.0 · 6+3</span>
-          </div>
-          <div class="card-body" style="padding:12px;">
-            <!-- 短期 -->
-            <div style="font-size:10px;font-weight:700;color:var(--info);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;border-bottom:1px solid var(--info-bg);padding-bottom:4px;">
-              <i class="fas fa-stopwatch"></i> 短期 · 本会话
-            </div>
-            <div class="memory-panel" style="padding:8px;margin-bottom:10px;">
-              <div class="memory-section" style="margin-bottom:8px;">
-                <div class="ms-title"><i class="fas fa-database" style="color:var(--info)!important;"></i>事实 · 硬事实 <span class="text-muted">不可摘要</span></div>
-                <div class="ms-content" id="mem-hardfacts"><span class="ms-empty">未录入</span></div>
-              </div>
-              <div class="memory-section" style="margin-bottom:8px;">
-                <div class="ms-title"><i class="fas fa-comments" style="color:var(--purple)!important;"></i>对话 · 滑动窗口 <span class="text-muted">w=10</span></div>
-                <div class="ms-content" id="mem-window"><span class="ms-empty">空</span></div>
-              </div>
-              <div class="memory-section">
-                <div class="ms-title"><i class="fas fa-user-cog" style="color:var(--accent-gold)!important;"></i>偏好 · 临时设定</div>
-                <div class="ms-content" id="mem-sesspref"><span class="ms-empty">默认（合规官 · 详细）</span></div>
-              </div>
-            </div>
-
-            <!-- 长期 -->
-            <div style="font-size:10px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;border-bottom:1px solid var(--success-bg);padding-bottom:4px;">
-              <i class="fas fa-history"></i> 长期 · 跨会话
-            </div>
-            <div class="memory-panel" style="padding:8px;margin-bottom:10px;">
-              <div class="memory-section" style="margin-bottom:8px;">
-                <div class="ms-title"><i class="fas fa-bookmark" style="color:var(--info)!important;"></i>事实 · 引用记忆 <span class="pill pill-gold" style="font-size:9px;">×1.2 权重</span></div>
-                <div class="ms-content" id="mem-cited"><span class="ms-empty">未引用</span></div>
-              </div>
-              <div class="memory-section" style="margin-bottom:8px;">
-                <div class="ms-title"><i class="fas fa-compress-alt" style="color:var(--purple)!important;"></i>对话 · Schema 摘要 <span class="text-muted">&gt;6K tok</span></div>
-                <div class="ms-content" id="mem-summary"><span class="ms-empty">未触发</span></div>
-              </div>
-              <div class="memory-section">
-                <div class="ms-title"><i class="fas fa-id-card" style="color:var(--accent-gold)!important;"></i>偏好 · 用户画像</div>
-                <div class="ms-content" id="mem-profile"><span class="ms-empty">合规官陈yy · 累计 0 次</span></div>
-              </div>
-            </div>
-
-            <!-- 补强 -->
-            <div style="font-size:10px;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;border-bottom:1px solid var(--warning-bg);padding-bottom:4px;">
-              <i class="fas fa-shield-alt"></i> 补强机制
-            </div>
-            <div class="memory-panel" style="padding:8px;">
-              <div class="memory-section" style="margin-bottom:6px;">
-                <div class="ms-title"><i class="fas fa-link" style="color:var(--info)!important;"></i>① 跨会话承接</div>
-                <div class="ms-content" id="mem-cross" style="font-size:10.5px;"><span class="ms-empty">本会话独立</span></div>
-              </div>
-              <div class="memory-section" style="margin-bottom:6px;">
-                <div class="ms-title"><i class="fas fa-trash-alt" style="color:var(--danger)!important;"></i>② TTL 遗忘</div>
-                <div class="ms-content" id="mem-ttl" style="font-size:10.5px;">硬事实=会话结束 · 摘要=30天 · 画像=可撤回</div>
-              </div>
-              <div class="memory-section">
-                <div class="ms-title"><i class="fas fa-balance-scale" style="color:var(--warning)!important;"></i>③ 冲突解决</div>
-                <div class="ms-content" id="mem-conflict" style="font-size:10.5px;"><span class="ms-empty">无冲突</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 查询改写过程透视（从对话页迁移） -->
-        <div class="card" style="margin:0;">
-          <div class="card-header">
-            <div class="card-title"><i class="fas fa-magic"></i>查询改写过程透视 <span class="card-subtitle">用户口语化问题 → 精确检索查询的全过程</span></div>
-            <span class="pill pill-info">实时</span>
-          </div>
-          <div class="card-body">
-            <div class="retrieval-panel" id="chat-rewrite-panel" style="min-height:480px;max-height:600px;">
-              <div class="r-line"><span class="r-tag">$</span><span class="r-content">在"智能咨询多轮对话"页面发送一条消息后，这里会实时显示查询改写过程...</span></div>
-              <div class="r-line"><span class="r-tag">i</span><span class="r-content" style="color:var(--text-muted);">展示内容包括：USER 原始输入 / 硬事实强制注入 / 指代消解 / 跨会话承接 / 意图分类 / 查询扩展 / 混合检索结果 / 引用记忆加权 / Schema 摘要触发等</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:10px;padding:10px 12px;background:var(--info-bg);border-left:3px solid var(--info);border-radius:6px;font-size:11.5px;color:var(--text-secondary);line-height:1.6;">
-        <i class="fas fa-info-circle text-primary-c"></i>
-        <strong>用途说明：</strong>这两个面板原本嵌在对话页中，会让最终用户看到内部技术细节。现已迁移到本"知识库日志"页，仅运维 / 算法侧使用，用于排查多轮对话退化、查询改写召回率不足、记忆冲突等问题。
-        <a href="javascript:void(0)" onclick="showPage('chat')" style="color:var(--primary);">→ 跳转到对话页发送一条消息触发更新</a>
-      </div>
+      <button class="btn" onclick="showPage('settings')"><i class="fas fa-arrow-right"></i> 前往系统设置</button>
     </div>
   </div>
-
   <!-- Stats -->
   <div class="stats-grid">
     <div class="stat-card">
@@ -2129,6 +2036,149 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
           <span class="mono text-muted fs-11" style="flex-shrink:0;">2026-06-30 23:59</span>
           <span class="text-muted">[预定] 临时文件《阶段性提高小微企业流贷单户限额》到期自动废止 → 同步恢复《对公信贷产品完整手册》§1.4 效力</span>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE: 系统设置（含调优视图，仅运维 / 算法可见）                -->
+<!-- ============================================================ -->
+<section class="page-section" id="page-settings">
+  <div class="page-header">
+    <div class="page-title">系统设置 <span class="title-sub">运维 & 调优 · 仅算法 / 工程师可见</span></div>
+    <div class="page-actions">
+      <span class="pill pill-warning"><i class="fas fa-eye-slash"></i> 不展示给业务用户</span>
+    </div>
+  </div>
+
+  <!-- 调优视图：记忆机制 + 查询改写 -->
+  <div class="card mb-16" style="border:1px dashed var(--warning);background:linear-gradient(135deg,#FFFBEB 0%,#FFF 60%);">
+    <div class="card-header" style="background:transparent;border-bottom:1px dashed #FDE68A;">
+      <div class="card-title">
+        <i class="fas fa-tools" style="color:var(--warning);"></i>
+        <span style="color:var(--warning);">调优视图（Debug / Tuning）</span>
+        <span class="card-subtitle">记忆机制实时状态 + 查询改写过程透视 · 用于多轮对话效果调优</span>
+      </div>
+      <span class="pill pill-info">v2.0 · 6+3</span>
+    </div>
+    <div class="card-body" style="padding:12px;">
+      <div class="two-col" style="grid-template-columns:340px 1fr;gap:12px;">
+        <!-- 记忆机制实时状态 -->
+        <div class="card" style="margin:0;">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-brain"></i>记忆机制实时状态</div>
+            <span class="pill pill-success">v2.0 · 6+3</span>
+          </div>
+          <div class="card-body" style="padding:12px;">
+            <div style="font-size:10px;font-weight:700;color:var(--info);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;border-bottom:1px solid var(--info-bg);padding-bottom:4px;">
+              <i class="fas fa-stopwatch"></i> 短期 · 本会话
+            </div>
+            <div class="memory-panel" style="padding:8px;margin-bottom:10px;">
+              <div class="memory-section" style="margin-bottom:8px;">
+                <div class="ms-title"><i class="fas fa-database" style="color:var(--info)!important;"></i>事实 · 硬事实 <span class="text-muted">不可摘要</span></div>
+                <div class="ms-content" id="mem-hardfacts"><span class="ms-empty">未录入</span></div>
+              </div>
+              <div class="memory-section" style="margin-bottom:8px;">
+                <div class="ms-title"><i class="fas fa-comments" style="color:var(--purple)!important;"></i>对话 · 滑动窗口 <span class="text-muted">w=10</span></div>
+                <div class="ms-content" id="mem-window"><span class="ms-empty">空</span></div>
+              </div>
+              <div class="memory-section">
+                <div class="ms-title"><i class="fas fa-user-cog" style="color:var(--accent-gold)!important;"></i>偏好 · 临时设定</div>
+                <div class="ms-content" id="mem-sesspref"><span class="ms-empty">默认（合规官 · 详细）</span></div>
+              </div>
+            </div>
+
+            <div style="font-size:10px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;border-bottom:1px solid var(--success-bg);padding-bottom:4px;">
+              <i class="fas fa-history"></i> 长期 · 跨会话
+            </div>
+            <div class="memory-panel" style="padding:8px;margin-bottom:10px;">
+              <div class="memory-section" style="margin-bottom:8px;">
+                <div class="ms-title"><i class="fas fa-bookmark" style="color:var(--info)!important;"></i>事实 · 引用记忆 <span class="pill pill-gold" style="font-size:9px;">×1.2 权重</span></div>
+                <div class="ms-content" id="mem-cited"><span class="ms-empty">未引用</span></div>
+              </div>
+              <div class="memory-section" style="margin-bottom:8px;">
+                <div class="ms-title"><i class="fas fa-compress-alt" style="color:var(--purple)!important;"></i>对话 · Schema 摘要 <span class="text-muted">&gt;6K tok</span></div>
+                <div class="ms-content" id="mem-summary"><span class="ms-empty">未触发</span></div>
+              </div>
+              <div class="memory-section">
+                <div class="ms-title"><i class="fas fa-id-card" style="color:var(--accent-gold)!important;"></i>偏好 · 用户画像</div>
+                <div class="ms-content" id="mem-profile"><span class="ms-empty">合规官陈yy · 累计 0 次</span></div>
+              </div>
+            </div>
+
+            <div style="font-size:10px;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;border-bottom:1px solid var(--warning-bg);padding-bottom:4px;">
+              <i class="fas fa-shield-alt"></i> 补强机制
+            </div>
+            <div class="memory-panel" style="padding:8px;">
+              <div class="memory-section" style="margin-bottom:6px;">
+                <div class="ms-title"><i class="fas fa-link" style="color:var(--info)!important;"></i>① 跨会话承接</div>
+                <div class="ms-content" id="mem-cross" style="font-size:10.5px;"><span class="ms-empty">本会话独立</span></div>
+              </div>
+              <div class="memory-section" style="margin-bottom:6px;">
+                <div class="ms-title"><i class="fas fa-trash-alt" style="color:var(--danger)!important;"></i>② TTL 遗忘</div>
+                <div class="ms-content" id="mem-ttl" style="font-size:10.5px;">硬事实=会话结束 · 摘要=30天 · 画像=可撤回</div>
+              </div>
+              <div class="memory-section">
+                <div class="ms-title"><i class="fas fa-balance-scale" style="color:var(--warning)!important;"></i>③ 冲突解决</div>
+                <div class="ms-content" id="mem-conflict" style="font-size:10.5px;"><span class="ms-empty">无冲突</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 查询改写过程透视 -->
+        <div class="card" style="margin:0;">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-magic"></i>查询改写过程透视 <span class="card-subtitle">用户口语化问题 → 精确检索查询的全过程</span></div>
+            <span class="pill pill-info">实时</span>
+          </div>
+          <div class="card-body">
+            <div class="retrieval-panel" id="chat-rewrite-panel" style="min-height:480px;max-height:600px;">
+              <div class="r-line"><span class="r-tag">$</span><span class="r-content">在"智能咨询多轮对话"页面发送一条消息后，这里会实时显示查询改写过程...</span></div>
+              <div class="r-line"><span class="r-tag">i</span><span class="r-content" style="color:var(--text-muted);">展示内容包括：USER 原始输入 / 硬事实强制注入 / 指代消解 / 跨会话承接 / 意图分类 / 查询扩展 / 混合检索结果 / 引用记忆加权 / Schema 摘要触发等</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;padding:10px 12px;background:var(--info-bg);border-left:3px solid var(--info);border-radius:6px;font-size:11.5px;color:var(--text-secondary);line-height:1.6;">
+        <i class="fas fa-info-circle text-primary-c"></i>
+        <strong>用途说明：</strong>这两个面板原本嵌在对话页，会让最终用户看到内部技术细节。现已迁移到本"系统设置"页，仅运维 / 算法侧使用，用于排查多轮对话退化、查询改写召回率不足、记忆冲突等问题。
+        <a href="javascript:void(0)" onclick="showPage('chat')" style="color:var(--primary);">→ 跳转到对话页发送一条消息触发更新</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- LLM 生成参数 -->
+  <div class="two-col" style="grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-sliders-h"></i>LLM 生成参数</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label>模型</label><select disabled><option>claude-sonnet-4-6</option></select></div>
+          <div class="form-group"><label>max_tokens</label><input type="number" value="2048" disabled></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>temperature</label><input type="number" step="0.05" value="0.1" disabled></div>
+          <div class="form-group"><label>top_p</label><input type="number" step="0.05" value="0.85" disabled></div>
+        </div>
+        <div class="text-muted fs-11 mt-12">参数取自 <span class="mono">config.py</span> · 配置后端 <span class="mono">.env</span> 后生效</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-search-plus"></i>检索参数</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group"><label>TOP_K（召回片段）</label><input type="number" value="8" disabled></div>
+          <div class="form-group"><label>SCORE_THRESHOLD</label><input type="number" step="0.05" value="0.3" disabled></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>HYBRID_ALPHA（语义权重）</label><input type="number" step="0.05" value="0.6" disabled></div>
+          <div class="form-group"><label>CHUNK_SIZE / OVERLAP</label><input type="text" value="500 / 80" disabled></div>
+        </div>
+        <div class="text-muted fs-11 mt-12">语义检索 × 0.6 + BM25 × 0.4 · 含 LLM 查询改写 2~3 条变体</div>
       </div>
     </div>
   </div>
