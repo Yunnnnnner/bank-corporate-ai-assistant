@@ -15,7 +15,7 @@ from pydantic import BaseModel
 import shutil, tempfile
 
 from pipeline import CreditKnowledgePipeline
-from config import CREDIT_CATEGORIES
+from config import CREDIT_CATEGORIES, TOP_K
 
 app = FastAPI(
     title    = "银行信贷知识库 RAG API",
@@ -43,7 +43,7 @@ def get_pl() -> CreditKnowledgePipeline:
 class AskRequest(BaseModel):
     question:    str
     category:    Optional[str] = None
-    top_k:       int           = 6
+    top_k:       int           = TOP_K
     stream:      bool          = False
     chat_history: Optional[List[dict]] = None
 
@@ -55,7 +55,7 @@ class AskResponse(BaseModel):
 class RetrieveRequest(BaseModel):
     query:    str
     category: Optional[str] = None
-    top_k:    int = 6
+    top_k:    int = TOP_K
 
 
 # ─── 路由 ────────────────────────────────────────────────────────
@@ -120,7 +120,12 @@ def ask(req: AskRequest):
 def ask_stream(req: AskRequest):
     """流式问答接口（SSE）"""
     pl                 = get_pl()
-    contexts, token_gen = pl.ask_stream(req.question, category=req.category, top_k=req.top_k)
+    contexts, token_gen = pl.ask_stream(
+        req.question,
+        category=req.category,
+        top_k=req.top_k,
+        chat_history=req.chat_history,
+    )
 
     def event_stream():
         for token in token_gen:

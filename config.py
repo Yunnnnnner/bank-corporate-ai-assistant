@@ -32,6 +32,8 @@ ZHIPU_API_KEY     = os.getenv("ZHIPU_API_KEY", "")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 LLM_MODEL         = os.getenv("LLM_MODEL", "claude-sonnet-4-6")
 LLM_MAX_TOKENS    = 2048
+LLM_TEMPERATURE   = float(os.getenv("LLM_TEMPERATURE", "0.1"))
+LLM_TOP_P         = float(os.getenv("LLM_TOP_P", "0.85"))
 
 # ─── 文本分割配置 ─────────────────────────────────────────────
 CHUNK_SIZE        = 500        # 每块最大字符数 (信贷条款较短，适当调小)
@@ -39,7 +41,7 @@ CHUNK_OVERLAP     = 80         # 重叠字符数 (~16%, 保证跨块语义连贯
 MIN_CHUNK_SIZE    = 50         # 过滤掉太短的碎片
 
 # ─── 检索配置 ─────────────────────────────────────────────────
-TOP_K             = 6          # 召回片段数量
+TOP_K             = 8          # 召回片段数量
 SCORE_THRESHOLD   = 0.3        # 最低相似度阈值 (0-1)
 HYBRID_ALPHA      = 0.6        # 语义检索权重 (1-alpha = 关键词权重)
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional
 from tqdm import tqdm
 
-from config import RAW_DIR
+from config import RAW_DIR, TOP_K
 from ingest.loader  import DocumentLoader
 from ingest.parser  import DocumentParser
 from ingest.cleaner import DataCleaner
@@ -111,22 +111,28 @@ class CreditKnowledgePipeline:
         self,
         question: str,
         category: Optional[str]    = None,
-        top_k: int                 = 6,
+        top_k: int                 = TOP_K,
         chat_history: Optional[list] = None,
     ) -> RAGResponse:
         contexts = self._smart_retrieve(question, category=category, top_k=top_k)
         return self.generator.generate(question, contexts, chat_history)
 
-    def ask_stream(self, question: str, category: Optional[str] = None, top_k: int = 6):
+    def ask_stream(
+        self,
+        question: str,
+        category: Optional[str] = None,
+        top_k: int = TOP_K,
+        chat_history: Optional[list] = None,
+    ):
         """流式问答，返回 (contexts, token_generator)"""
         contexts = self._smart_retrieve(question, category=category, top_k=top_k)
-        return contexts, self.generator.stream_generate(question, contexts)
+        return contexts, self.generator.stream_generate(question, contexts, chat_history)
 
     def retrieve_only(
         self,
         question: str,
         category: Optional[str] = None,
-        top_k: int = 6,
+        top_k: int = TOP_K,
     ) -> List[RetrievedContext]:
         return self._smart_retrieve(question, category=category, top_k=top_k)
 
@@ -134,7 +140,7 @@ class CreditKnowledgePipeline:
         self,
         question: str,
         category: Optional[str] = None,
-        top_k: int = 6,
+        top_k: int = TOP_K,
     ) -> List[RetrievedContext]:
         """多查询改写 + 合并去重检索"""
         queries = self.rewriter.rewrite(question)
