@@ -15,7 +15,11 @@ venv/
 # Database / Index
 *.sqlite3
 chroma_db/
+data/chroma/
 data/processed/
+data/metadata.db
+data/metadata.db-shm
+data/metadata.db-wal
 
 # OS
 .DS_Store
