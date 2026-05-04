@@ -6,6 +6,7 @@
 <title>银行公司业务智能小助手 · Wiki-RAG Demo</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 :root{
   --primary:#1E3A5F; --primary-light:#2A4A73; --primary-dark:#152D4A;
@@ -1493,9 +1494,26 @@ code,pre,.mono{font-family:'JetBrains Mono','Menlo',monospace;}
           <textarea id="cp-need" rows="2">企业有 1000 万应收账款（核心企业开具，账期 90 天），希望提前回笼资金，融资期限 6 个月以内</textarea>
         </div>
       </div>
-      <button class="btn btn-filled" style="width:100%;justify-content:center;padding:11px;" onclick="runCompare()">
-        <i class="fas fa-search-plus"></i> 跨产品并行检索 + 智能比对
-      </button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-filled" style="flex:1;justify-content:center;padding:11px;" onclick="runCompare()">
+          <i class="fas fa-search-plus"></i> 本地模拟（预置案例）
+        </button>
+        <button class="btn btn-filled" style="flex:1;justify-content:center;padding:11px;background:linear-gradient(135deg,#7C3AED,#6D28D9);" onclick="runCompareReal()">
+          <i class="fas fa-plug"></i> 调用真实 API
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 真实 API 报告 -->
+  <div class="card mb-16" id="cp-api-card" style="display:none;">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-cloud"></i>真实 API 报告（Claude + RAG）</div>
+      <span class="pill pill-success" id="cp-api-status"><i class="fas fa-spinner fa-spin"></i> 调用中…</span>
+    </div>
+    <div class="card-body" style="padding:18px;">
+      <div id="cp-api-report" style="font-size:14px;line-height:1.7;color:var(--text-primary);"></div>
+      <div id="cp-api-sources" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border-light);"></div>
     </div>
   </div>
 
@@ -3300,6 +3318,56 @@ async function runCompare(key){
   html+='</tbody>';
   tbl.innerHTML=html;
   document.getElementById('cp-recommend').innerHTML=data.rec;
+}
+
+// ─── 真实 API 调用 ────────────────────────────────────────────
+const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : (window.RAG_API_BASE || 'http://localhost:8000');
+
+async function runCompareReal(){
+  const card    = document.getElementById('cp-api-card');
+  const status  = document.getElementById('cp-api-status');
+  const reportEl= document.getElementById('cp-api-report');
+  const sourcesEl= document.getElementById('cp-api-sources');
+  card.style.display='';
+  status.className='pill pill-success';
+  status.innerHTML='<i class="fas fa-spinner fa-spin"></i> 调用中…';
+  reportEl.innerHTML='<div style="color:var(--text-muted);padding:24px;text-align:center;">正在并行检索 + LLM 推理，约 8-15 秒…</div>';
+  sourcesEl.innerHTML='';
+
+  const payload={
+    company_type: document.getElementById('cp-type').value,
+    amount:       parseFloat(document.getElementById('cp-amount').value)||1000,
+    description:  document.getElementById('cp-need').value,
+  };
+  try{
+    const t0=Date.now();
+    const r=await fetch(API_BASE+'/compare',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    const dt=((Date.now()-t0)/1000).toFixed(1);
+    status.className='pill pill-success';
+    status.innerHTML=`<i class="fas fa-check-circle"></i> ${dt}s · ${data.usage.prompt_tokens}+${data.usage.completion_tokens} tokens`;
+    reportEl.innerHTML=marked.parse(data.report||'(空)');
+    if(data.sources && data.sources.length){
+      let s='<div style="font-weight:600;margin-bottom:8px;color:var(--text-secondary);font-size:13px;"><i class="fas fa-quote-left"></i> 引用来源（'+data.sources.length+'）</div>';
+      for(const src of data.sources){
+        s+=`<div style="font-size:12px;color:var(--text-muted);margin:4px 0;">[${src.ref}] 《${src.filename}》 · ${src.category} · score=${src.score}</div>`;
+      }
+      sourcesEl.innerHTML=s;
+    }
+  }catch(e){
+    status.className='pill pill-danger';
+    status.innerHTML='<i class="fas fa-times-circle"></i> 调用失败';
+    reportEl.innerHTML=`<div style="color:var(--danger);padding:16px;background:var(--danger-bg);border-radius:8px;">
+      <strong>调用真实 API 失败：</strong> ${e.message}<br>
+      <span style="font-size:12px;color:var(--text-secondary);">请确认后端已启动：<code>python -m uvicorn api.app:app --port 8000</code></span></div>`;
+  }
 }
 
 // ============================================================

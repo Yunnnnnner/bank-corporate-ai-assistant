@@ -16,6 +16,8 @@ import shutil, tempfile
 
 from pipeline import CreditKnowledgePipeline
 from config import CREDIT_CATEGORIES, TOP_K
+from scenarios.product_comparison import ProductComparisonAssistant, FinancingNeed
+from scenarios.credit_prereview import CreditPrereviewAssistant, LoanApplication
 
 app = FastAPI(
     title    = "银行信贷知识库 RAG API",
@@ -31,12 +33,26 @@ app.add_middleware(
 
 # 单例流水线（进程级共享）
 _pipeline: Optional[CreditKnowledgePipeline] = None
+_compare_asst: Optional[ProductComparisonAssistant] = None
+_prereview_asst: Optional[CreditPrereviewAssistant] = None
 
 def get_pl() -> CreditKnowledgePipeline:
     global _pipeline
     if _pipeline is None:
         _pipeline = CreditKnowledgePipeline()
     return _pipeline
+
+def get_compare_asst() -> ProductComparisonAssistant:
+    global _compare_asst
+    if _compare_asst is None:
+        _compare_asst = ProductComparisonAssistant(pipeline=get_pl())
+    return _compare_asst
+
+def get_prereview_asst() -> CreditPrereviewAssistant:
+    global _prereview_asst
+    if _prereview_asst is None:
+        _prereview_asst = CreditPrereviewAssistant(pipeline=get_pl())
+    return _prereview_asst
 
 
 # ─── 数据模型 ────────────────────────────────────────────────────
@@ -57,6 +73,34 @@ class RetrieveRequest(BaseModel):
     query:    str
     category: Optional[str] = None
     top_k:    int = TOP_K
+
+
+class CompareRequest(BaseModel):
+    company_type:    str
+    amount:          float
+    description:     str
+    expected_term:   Optional[str]  = None
+    industry:        Optional[str]  = None
+    rating:          Optional[str]  = None
+    cost_sensitive:  bool           = False
+
+
+class PrereviewRequest(BaseModel):
+    company_name:          str
+    established_year:      int
+    industry:              str
+    company_type:          str
+    annual_revenue:        float
+    asset_liability_ratio: float
+    credit_rating:         str
+    has_bad_credit:        bool = False
+    product_type:          str  = ""
+    loan_amount:           float = 0.0
+    loan_term_months:      int   = 12
+    loan_purpose:          str   = ""
+    guarantee_type:        str   = ""
+    guarantee_value:       float = 0.0
+    remarks:               str   = ""
 
 
 # ─── 路由 ────────────────────────────────────────────────────────
@@ -161,3 +205,62 @@ def retrieve(req: RetrieveRequest):
 @app.get("/categories")
 def get_categories():
     return CREDIT_CATEGORIES
+
+
+# ─── 场景接口 · 产品方案智能比对 ───────────────────────────────────
+@app.post("/compare")
+def compare_products(req: CompareRequest):
+    """基于 textarea 场景描述 + 金额 + 企业类型，并行检索多产品手册，生成 4 步推理比对报告"""
+    asst   = get_compare_asst()
+    need   = FinancingNeed(
+        company_type   = req.company_type,
+        amount         = req.amount,
+        description    = req.description,
+        expected_term  = req.expected_term,
+        industry       = req.industry,
+        rating         = req.rating,
+        cost_sensitive = req.cost_sensitive,
+    )
+    report = asst.compare(need, verbose=False)
+    return {
+        "report":  report.report_text,
+        "sources": report.sources,
+        "usage":   {
+            "prompt_tokens":     report.prompt_tokens,
+            "completion_tokens": report.completion_tokens,
+        },
+    }
+
+
+# ─── 场景接口 · 信贷预审 ────────────────────────────────────────────
+@app.post("/prereview")
+def prereview(req: PrereviewRequest):
+    """基于申请要素并行检索多维度规则，生成 8 段结构化预审报告"""
+    asst = get_prereview_asst()
+    app_ = LoanApplication(
+        company_name          = req.company_name,
+        established_year      = req.established_year,
+        industry              = req.industry,
+        company_type          = req.company_type,
+        annual_revenue        = req.annual_revenue,
+        asset_liability_ratio = req.asset_liability_ratio,
+        credit_rating         = req.credit_rating,
+        has_bad_credit        = req.has_bad_credit,
+        product_type          = req.product_type,
+        loan_amount           = req.loan_amount,
+        loan_term_months      = req.loan_term_months,
+        loan_purpose          = req.loan_purpose,
+        guarantee_type        = req.guarantee_type,
+        guarantee_value       = req.guarantee_value,
+        remarks               = req.remarks,
+    )
+    report = asst.review(app_, verbose=False)
+    return {
+        "overall": report.overall,
+        "report":  report.report_text,
+        "sources": report.sources,
+        "usage":   {
+            "prompt_tokens":     report.prompt_tokens,
+            "completion_tokens": report.completion_tokens,
+        },
+    }
