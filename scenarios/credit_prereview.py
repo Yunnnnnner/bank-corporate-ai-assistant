@@ -31,13 +31,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from dataclasses import dataclass, field
 from typing import Optional, List
-import anthropic
+from generation.llm_client import make_llm_client
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from pipeline import CreditKnowledgePipeline
-from config import LLM_MODEL, ANTHROPIC_API_KEY
+from config import LLM_MODEL
 
 # ─────────────────────────────────────────────────────────────────
 # 申请要素数据模型
@@ -173,7 +173,7 @@ class CreditPrereviewAssistant:
 
     def __init__(self, pipeline: Optional[CreditKnowledgePipeline] = None):
         self.pl     = pipeline or CreditKnowledgePipeline()
-        self.client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        self.client = make_llm_client()
 
     def review(self, app: LoanApplication, verbose: bool = True) -> PrereviewReport:
         """执行预审，返回完整报告"""
@@ -227,16 +227,17 @@ class CreditPrereviewAssistant:
             print("─" * 60)
 
         full_text = ""
-        with self.client.messages.stream(
-            model      = LLM_MODEL,
-            max_tokens = 2500,
+        usage     = None
+        with self.client.chat_stream(
             system     = PREREVIEW_SYSTEM,
+            max_tokens = 2500,
             messages   = [{"role": "user", "content": user_prompt}],
         ) as stream:
-            for token in stream.text_stream:
+            for token in stream:
                 if verbose:
                     print(token, end="", flush=True)
                 full_text += token
+            usage = stream.usage
 
         if verbose:
             print("\n" + "─" * 60)
@@ -245,15 +246,13 @@ class CreditPrereviewAssistant:
         overall = self._parse_conclusion(full_text)
         sources = self._extract_sources(contexts)
 
-        usage   = stream.get_final_message().usage
-
         return PrereviewReport(
             application       = app,
             overall           = overall,
             report_text       = full_text,
             sources           = sources,
-            prompt_tokens     = usage.input_tokens,
-            completion_tokens = usage.output_tokens,
+            prompt_tokens     = usage.input_tokens if usage else 0,
+            completion_tokens = usage.output_tokens if usage else 0,
         )
 
     # ── 内部工具方法 ─────────────────────────────────────────────────

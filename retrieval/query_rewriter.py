@@ -4,8 +4,7 @@
 """
 from __future__ import annotations
 from typing import List
-import anthropic
-from config import ANTHROPIC_API_KEY, LLM_MODEL
+from generation.llm_client import make_llm_client, is_llm_configured
 
 
 REWRITE_SYSTEM = """你是银行信贷领域的检索查询改写专家。用户会以口语化、省略关键信息的方式提问，你要把它改写成 2-3 条更精确、术语化的检索查询，用于在银行信贷知识库（监管文件/法律法规/内部政策/业务规则）中检索相关条款。
@@ -43,25 +42,20 @@ REWRITE_SYSTEM = """你是银行信贷领域的检索查询改写专家。用户
 
 class QueryRewriter:
     def __init__(self):
-        if ANTHROPIC_API_KEY:
-            self._client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        else:
-            self._client = None
+        self._client = make_llm_client() if is_llm_configured() else None
 
     def rewrite(self, question: str) -> List[str]:
         """返回原始查询 + 改写变体"""
         if not self._client:
             return [question]
         try:
-            resp = self._client.messages.create(
-                model      = LLM_MODEL,
-                max_tokens = 200,
+            resp = self._client.chat(
                 system     = REWRITE_SYSTEM,
                 messages   = [{"role": "user", "content": question}],
+                max_tokens = 200,
             )
-            variants = [line.strip() for line in resp.content[0].text.strip().split('\n')
+            variants = [line.strip() for line in resp.text.strip().split('\n')
                         if line.strip() and len(line.strip()) > 5]
-            # 原始查询 + 最多2个变体
             return [question] + variants[:2]
         except Exception:
             return [question]

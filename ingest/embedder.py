@@ -24,7 +24,8 @@ class Embedder:
     def _init(self):
         if self.backend == "sentence_transformers":
             from sentence_transformers import SentenceTransformer
-            self._client = SentenceTransformer(self.model)
+            # 显式 device=cpu 规避新版 torch 的 meta tensor 问题
+            self._client = SentenceTransformer(self.model, device="cpu")
         elif self.backend == "openai":
             import openai
             openai.api_key = OPENAI_API_KEY

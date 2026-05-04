@@ -22,13 +22,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from dataclasses import dataclass, field
 from typing import Optional, List
-import anthropic
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from pipeline import CreditKnowledgePipeline
-from config import LLM_MODEL, ANTHROPIC_API_KEY
+from config import LLM_MODEL
+from generation.llm_client import make_llm_client
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ class ProductComparisonAssistant:
 
     def __init__(self, pipeline: Optional[CreditKnowledgePipeline] = None):
         self.pl     = pipeline or CreditKnowledgePipeline()
-        self.client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        self.client = make_llm_client()
 
     # ── 主入口 ──────────────────────────────────────────────────
     def compare(self, need: FinancingNeed, verbose: bool = True) -> ComparisonReport:
@@ -264,26 +264,26 @@ class ProductComparisonAssistant:
             print("\n[LLM] 正在生成比对报告...\n" + "─" * 60)
 
         full_text = ""
-        with self.client.messages.stream(
-            model      = LLM_MODEL,
-            max_tokens = 3000,
+        usage     = None
+        with self.client.chat_stream(
             system     = COMPARE_SYSTEM,
+            max_tokens = 3000,
             messages   = [{"role": "user", "content": user_prompt}],
         ) as stream:
-            for token in stream.text_stream:
+            for token in stream:
                 if verbose:
                     print(token, end="", flush=True)
                 full_text += token
+            usage = stream.usage
         if verbose:
             print("\n" + "─" * 60)
 
-        usage = stream.get_final_message().usage
         return ComparisonReport(
             need        = need,
             report_text = full_text,
             sources     = self._extract_sources(contexts),
-            prompt_tokens     = usage.input_tokens,
-            completion_tokens = usage.output_tokens,
+            prompt_tokens     = usage.input_tokens if usage else 0,
+            completion_tokens = usage.output_tokens if usage else 0,
         )
 
     # ── 内部工具方法 ────────────────────────────────────────────

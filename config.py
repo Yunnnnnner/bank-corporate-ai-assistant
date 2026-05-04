@@ -4,6 +4,13 @@
 import os
 from pathlib import Path
 
+# 在任何 os.getenv 之前加载 .env
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+
 BASE_DIR = Path(__file__).parent
 
 # ─── 数据目录 ───────────────────────────────────────────────
@@ -28,10 +35,24 @@ EMBEDDING_MODEL   = os.getenv(
 OPENAI_API_KEY    = os.getenv("OPENAI_API_KEY", "")
 ZHIPU_API_KEY     = os.getenv("ZHIPU_API_KEY", "")
 
-# ─── LLM 配置 (Claude) ───────────────────────────────────────
+# ─── LLM 配置（支持 anthropic | deepseek） ──────────────────────
+LLM_PROVIDER      = os.getenv("LLM_PROVIDER", "anthropic").lower()
+
+# Anthropic
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-LLM_MODEL         = os.getenv("LLM_MODEL", "claude-sonnet-4-6")
-LLM_MAX_TOKENS    = 2048
+
+# DeepSeek（OpenAI-compatible）
+DEEPSEEK_API_KEY  = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+
+# 模型名（按 provider 默认）
+_DEFAULT_MODEL = {
+    "anthropic": "claude-sonnet-4-5",
+    "deepseek":  "deepseek-chat",
+}
+LLM_MODEL         = os.getenv("LLM_MODEL") or os.getenv("DEEPSEEK_MODEL") \
+                    or _DEFAULT_MODEL.get(LLM_PROVIDER, "claude-sonnet-4-5")
+LLM_MAX_TOKENS    = int(os.getenv("LLM_MAX_TOKENS", "2048"))
 LLM_TEMPERATURE   = float(os.getenv("LLM_TEMPERATURE", "0.1"))
 LLM_TOP_P         = float(os.getenv("LLM_TOP_P", "0.85"))
 

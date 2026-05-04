@@ -1,6 +1,7 @@
 """
 文档加载器 - 扫描目录，识别格式，分发到解析器
 """
+from __future__ import annotations
 import hashlib
 from pathlib import Path
 from dataclasses import dataclass, field

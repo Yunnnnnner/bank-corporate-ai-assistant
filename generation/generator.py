@@ -5,11 +5,11 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
-import anthropic
 
-from config import ANTHROPIC_API_KEY, LLM_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE, LLM_TOP_P
+from config import LLM_MODEL
 from retrieval.retriever import RetrievedContext
 from generation.prompts import build_system_prompt, build_user_prompt
+from generation.llm_client import make_llm_client
 
 
 @dataclass
@@ -24,7 +24,7 @@ class RAGResponse:
 
 class CreditRAGGenerator:
     def __init__(self, model: str = LLM_MODEL):
-        self._client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        self._client = make_llm_client(model=model)
         self.model   = model
 
     def generate(
@@ -45,26 +45,16 @@ class CreditRAGGenerator:
             messages.extend(chat_history)
         messages.append({"role": "user", "content": user_content})
 
-        # ── 调用 Claude ───────────────────────────────────────────
-        response = self._client.messages.create(
-            model      = self.model,
-            max_tokens = LLM_MAX_TOKENS,
-            temperature = LLM_TEMPERATURE,
-            top_p      = LLM_TOP_P,
-            system     = system_prompt,
-            messages   = messages,
-        )
-
-        answer = response.content[0].text
-        sources = self._extract_sources(contexts)
+        # ── 调用 LLM ────────────────────────────────────────────
+        resp = self._client.chat(system=system_prompt, messages=messages)
 
         return RAGResponse(
-            answer   = answer,
-            sources  = sources,
+            answer   = resp.text,
+            sources  = self._extract_sources(contexts),
             contexts = contexts,
             model    = self.model,
-            prompt_tokens     = response.usage.input_tokens,
-            completion_tokens = response.usage.output_tokens,
+            prompt_tokens     = resp.usage.input_tokens,
+            completion_tokens = resp.usage.output_tokens,
         )
 
     def _build_context_block(self, contexts: List[RetrievedContext]) -> str:
@@ -111,13 +101,6 @@ class CreditRAGGenerator:
             messages.extend(chat_history)
         messages.append({"role": "user", "content": user_content})
 
-        with self._client.messages.stream(
-            model      = self.model,
-            max_tokens = LLM_MAX_TOKENS,
-            temperature = LLM_TEMPERATURE,
-            top_p      = LLM_TOP_P,
-            system     = system_prompt,
-            messages   = messages,
-        ) as stream:
-            for text in stream.text_stream:
+        with self._client.chat_stream(system=system_prompt, messages=messages) as stream:
+            for text in stream:
                 yield text
