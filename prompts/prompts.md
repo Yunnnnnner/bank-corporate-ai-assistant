@@ -11,6 +11,8 @@
 | `REWRITE_SYSTEM` | `retrieval/query_rewriter.py` | 用户问题 → 2-3 条检索查询改写 | — |
 | `PREREVIEW_SYSTEM` | `scenarios/credit_prereview.py` | 信贷预审结构化报告 | — |
 | `PREREVIEW_USER_TEMPLATE` | `scenarios/credit_prereview.py` | 预审 user turn 包装 | `{application_desc}`、`{knowledge_block}` |
+| `COMPARE_SYSTEM` | `scenarios/product_comparison.py` | 产品方案智能比对（4 步推理 + 8 维度对齐） | — |
+| `BASE_QUERIES` / `PRODUCT_QUERIES_BY_SIGNAL` | `scenarios/product_comparison.py` | 比对场景按信号触发的检索查询族 | `{scene}`、`{amount}` |
 
 ## 设计原则（所有 prompt 统一遵守）
 
@@ -276,7 +278,89 @@ RETRIEVAL_QUERIES = [
    - `USER_PROMPT_TEMPLATE` 包装 ≤ 200 tokens（不含检索内容）
    - 知识片段每条 ≤ 400 tokens，最多 8 条
 
+---
+
+## 7. 产品方案智能比对系统提示（`COMPARE_SYSTEM`）
+
+**位置**：`scenarios/product_comparison.py`
+
+**适用**：demo_web `page-compare` 页面、`ProductComparisonAssistant.compare()`
+
+**输入字段**（来自前端 textarea + 表单）
+- `company_type`：企业类型（中型制造业 / 小微贸易 / 核心企业上游供应商 / ...）
+- `amount`：融资金额（万元）
+- `description`：**口语化场景描述（textarea）**，例如"企业有 1000 万应收账款（核心企业开具，账期 90 天），希望提前回笼资金，融资期限 6 个月以内"
+- 可选：`expected_term`、`industry`、`rating`、`cost_sensitive`
+
+**4 步推理链路**
+1. **Step 1 · 信号抽取**：从 textarea 描述中识别 6 类信号（场景类别 / 关键期限 / 核心交易凭证 / 核心企业关系 / 利率敏感度 / 特殊要求）
+2. **Step 2 · 候选产品池**：基于信号在【知识库】中圈出 3-5 个产品（保理 / 质押贷 / e点贷 / e销贷 / 流贷 / 银承 / 贴现 / 信用证 / 透支 / 固贷）
+3. **Step 3 · 8 维度对齐**：额度 / 期限 / 利率 / 担保 / 审批层级 / 材料 / 适用条件 / 风险点
+4. **Step 4 · 评分推荐**：按 场景40% + 期限20% + 额度15% + 成本15% + 效率10% 加权打分
+
+**严格约束**
+- 唯一信源：所有维度取值必须来自【知识库检索内容】，找不到就标"知识库中暂无明确数据"
+- 逐项引用：每个产品的每个数值都要带 `[来源X]`；推荐结论引用 ≥ 2 条
+- 禁用句式：禁止"通常""市面上""行业惯例""一般而言""大致""可能"
+- 场景错配显式化：候选产品本不适用本场景时显式标注"⚠ 不适用 - 原因..."
+
+**输出 6 段结构**
+1. 诉求信号抽取
+2. 候选产品池
+3. 横向对比矩阵（Markdown 表格 + 最优值加粗）
+4. 匹配度评分表
+5. 综合推荐（🎯 推荐 / 备选 / 不适用）
+6. 下一步建议（具体材料 / 动作 / 责任人）
+
+完整 prompt 见 `scenarios/product_comparison.py` 中的 `COMPARE_SYSTEM` 常量。
+
+---
+
+## 8. 比对场景检索查询族（`BASE_QUERIES` + `PRODUCT_QUERIES_BY_SIGNAL`）
+
+**位置**：`scenarios/product_comparison.py` 类属性
+
+**设计**：先做轻量启发式场景识别（`_infer_scene`），再按信号触发对应产品族查询。
+
+```python
+BASE_QUERIES = [
+    "{scene} 融资产品 适用",
+    "{amount}万元 融资 审批权限 分级",
+    "公司业务 产品 利率定价 加点",
+    "公司业务 产品 所需材料 审批流程",
+]
+
+PRODUCT_QUERIES_BY_SIGNAL = {
+    "应收账款": ["银行保理 应收账款 融资比例 期限",
+              "应收账款质押贷款 质押率 登记",
+              "供应链 e 销贷 核心企业 应收"],
+    "采购付款": ["供应链 e 点贷 上游 采购融资",
+              "国内信用证 贸易融资",
+              "银行承兑汇票 采购付款"],
+    "短期周转": ["流动资金贷款 短期 期限",
+              "银行承兑汇票 周转",
+              "票据贴现 短期融资",
+              "透支额度 随借随还"],
+    "项目建设": ["固定资产贷款 项目建设",
+              "项目融资 期限 担保"],
+    "跨境结算": ["国内信用证 跨境结算",
+              "贸易融资 进出口"],
+    "_default": ["流动资金贷款 准入条件",
+              "银行承兑汇票 适用",
+              "供应链金融 产品体系"],
+}
+```
+
+**用途**：单次 `compare()` 调用约触发 7-10 条并行检索，覆盖通用维度 + 场景化产品族 + 行业/评级补充，召回片段去重后取 top-14 投喂给 LLM。
+
+---
+
 ## Changelog
+
+### 2026-05-03 · v2.1
+- 新增 `scenarios/product_comparison.py`：完整数据模型 + COMPARE_SYSTEM + 启发式场景识别 + 信号触发的检索查询族 + ProductComparisonAssistant 助手类
+- COMPARE_SYSTEM 采用 4 步推理 + 6 段输出结构，所有维度取值必须带 `[来源X]` 引用
+- 比对场景检索：BASE_QUERIES（4 条通用） + PRODUCT_QUERIES_BY_SIGNAL（5 个场景 × 3-4 条产品族） + 行业/评级补充
 
 ### 2026-05-03 · v2.0
 - `SYSTEM_PROMPT`：加入个性化 `{user_profile}` 注入点；冲突优先级明确化
